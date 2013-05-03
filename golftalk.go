@@ -178,7 +178,7 @@ func eval(sexp interface{}, env *Env) interface{} {
 
 	// Is the sexp just a list?
 	// If so, let's apply the first symbol as a function to the rest of it!
-	if lst, ok := sexp.(*list.List) {
+	if lst, ok := sexp.(*list.List); ok {
 		// The "car" of the list will be a symbol representing a function
 		car, _ := lst.Front().Value.(string)
 
