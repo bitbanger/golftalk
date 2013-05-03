@@ -99,14 +99,12 @@ func splitByRegex(str, regex string) *list.List {
 // And here's where we abandon type safety...
 func atomize(str string) interface{} {
 	// First, try to atomize it as an integer
-	i, err := strconv.ParseInt(str, 10, 32)
-	if err == nil {
+	if i, err := strconv.ParseInt(str, 10, 32); err == nil {
 		return i
 	}
 
 	// That didn't work? Maybe it's a float
-	f, err2 := strconv.ParseFloat(str, 32)
-	if err2 == nil {
+	if f, err := strconv.ParseFloat(str, 32); err == nil {
 		return f
 	}
 
@@ -139,23 +137,19 @@ func parseSexp(tokens *list.List) interface{} {
 }
 
 func sexpToString(sexp interface{}) string {
-	i, good := sexp.(int64)
-	if good {
+	if i, ok := sexp.(int64); ok {
 		return fmt.Sprintf("%d", i)
 	}
 
-	f, good2 := sexp.(float64)
-	if good2 {
+	if f, ok := sexp.(float64); ok {
 		return fmt.Sprintf("%f", f)
 	}
 
-	s, good3 := sexp.(string)
-	if good3 {
+	if s, ok := sexp.(string); ok {
 		return s
 	}
 
-	l, good4 := sexp.(*list.List)
-	if good4 {
+	if l, ok := sexp.(*list.List); ok {
 		ret := "("
 		for e := l.Front(); e != nil; e = e.Next() {
 			ret = ret + sexpToString(e.Value)
@@ -172,8 +166,7 @@ func sexpToString(sexp interface{}) string {
 func eval(sexp interface{}, env *Env) interface{} {
 	// Is the sexp just a symbol?
 	// If so, let's look it up!
-	symbol, good := sexp.(string)
-	if good {
+	if symbol, ok := sexp.(string); ok {
 		lookupEnv := env.Find(symbol)
 		if lookupEnv != nil {
 			return lookupEnv.Dict[symbol]
@@ -185,8 +178,7 @@ func eval(sexp interface{}, env *Env) interface{} {
 
 	// Is the sexp just a list?
 	// If so, let's apply the first symbol as a function to the rest of it!
-	lst, good2 := sexp.(*list.List)
-	if good2 {
+	if lst, ok := sexp.(*list.List) {
 		// The "car" of the list will be a symbol representing a function
 		car, _ := lst.Front().Value.(string)
 
