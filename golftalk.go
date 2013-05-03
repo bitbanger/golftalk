@@ -198,7 +198,7 @@ func eval(sexp interface{}, env *Env) interface{} {
 
 				result, wasInt := eval(test, env).(int64)
 
-				if(wasInt && result > 0) {
+				if wasInt && result > 0 {
 					return eval(conseq, env)
 				} else {
 					return eval(alt, env)
