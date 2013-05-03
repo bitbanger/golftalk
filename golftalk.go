@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"bufio"
 	"os"
+	"io"
 )
 
 // TODO: Is this really the best way to do this recursive type embedding thing?
@@ -278,7 +279,15 @@ func main() {
 
 	for true {
 		fmt.Print("golftalk~$ ")
-		line, _ := in.ReadString('\n')
+		line, err := in.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println(); //end line with prompt on it
+				break; //We should end the REPL if EOF is reached
+			} else {
+				panic(err) //something went wrong...
+			}
+		}
 		if line != "" && line != "\n" {
 			result := eval(parseSexp(splitByRegex(tokenize(line), "\\s+")), globalEnv)
 			if result != nil {
