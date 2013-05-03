@@ -282,8 +282,8 @@ func main() {
 		line, err := in.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println(); //end line with prompt on it
-				break; //We should end the REPL if EOF is reached
+				fmt.Println() //end line with prompt on it
+				break //We should end the REPL if EOF is reached
 			} else {
 				panic(err) //something went wrong...
 			}
