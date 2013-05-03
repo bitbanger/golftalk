@@ -59,9 +59,13 @@ func get(lst *list.List, n int) interface{} {
 	return obj.Value
 }
 
-func ToSlice(lst *list.List) []interface{} {
+func toSlice(lst *list.List) []interface{} {
 	slice := make([]interface{}, lst.Len())
-
+	i := 0
+	for e := lst.Front(); e != nil; e = e.Next() {
+		slice[i] = e.Value
+		i++
+	}
 	return slice
 }
 
@@ -211,6 +215,11 @@ func eval(sexp interface{}, env *Env) interface{} {
 				symExp := get(lst, 2)
 
 				env.Dict[sym] = eval(symExp, env)
+			case "apply":
+				proc, _ := eval(get(lst, 1), env).(func(args ...interface{}) interface{})
+				args, _ := eval(get(lst, 2), env).(*list.List)
+				argArr := toSlice(args)
+				return proc(argArr...)
 			case "bring-me-back-something-good":
 				vars, _ := get(lst, 1).(*list.List)
 				exp := get(lst, 2)
