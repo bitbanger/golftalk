@@ -216,6 +216,7 @@ func eval(sexp interface{}, env *Env) interface{} {
 				symExp := get(lst, 2)
 
 				env.Dict[sym] = eval(symExp, env)
+				return nil
 			case "apply":
 				proc, _ := eval(get(lst, 1), env).(func(args ...interface{}) interface{})
 				args, _ := eval(get(lst, 2), env).(*list.List)
