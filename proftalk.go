@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"container/list"
 	"strconv"
+	"bufio"
+	"os"
 )
 
 // TODO: Is this really the best way to do this recursive type embedding thing?
@@ -34,6 +36,19 @@ func NewEnv() *Env {
 	return env
 }
 
+func MakeEnv(keys []string, vals []interface{}, outer *Env) *Env {
+	env := &Env{}
+	env.Dict = make(map[string]interface{})
+
+	for i, key := range keys {
+		env.Dict[key] = vals[i]
+	}
+
+	env.Outer = outer
+
+	return env
+}
+
 func get(lst *list.List, n int) interface{} {
 	obj := lst.Front()
 
@@ -42,6 +57,12 @@ func get(lst *list.List, n int) interface{} {
 	}
 
 	return obj.Value
+}
+
+func ToSlice(lst *list.List) []interface{} {
+	slice := make([]interface{}, lst.Len())
+
+	return slice
 }
 
 func tokenize(s string) string {
@@ -177,6 +198,49 @@ func eval(sexp interface{}, env *Env) interface{} {
 				} else {
 					return eval(alt, env)
 				}
+			case "you-folks":
+				literal := list.New()
+
+				for e := lst.Front().Next(); e != nil; e = e.Next() {
+					literal.PushBack(e.Value)
+				}
+
+				return literal
+			case "yknow":
+				sym, _ := get(lst, 1).(string)
+				symExp := get(lst, 2)
+
+				env.Dict[sym] = eval(symExp, env)
+			case "bring-me-back-something-good":
+				vars, _ := get(lst, 1).(*list.List)
+				exp := get(lst, 2)
+
+				return func(args ...interface{}) interface{} {
+					lambVars := make([]string, vars.Len())
+					for i := range lambVars {
+						lambVar, _ := get(vars, i).(string)
+						lambVars[i] = lambVar
+					}
+
+					newEnv := MakeEnv(lambVars, args, env)
+
+					return eval(exp, newEnv)
+				};
+			case "exit":
+				os.Exit(0)
+			default:
+				args := make([]interface{}, lst.Len() - 1)
+				for i := range args {
+					args[i] = eval(get(lst, i + 1), env)
+				}
+
+				proc, wasFunc := eval(get(lst, 0), env).(func(args ...interface{}) interface{})
+				if wasFunc {
+					return proc(args...)
+				} else {
+					fmt.Printf("No.\n\t'%s' is not a valid function.\n", get(lst, 0))
+				}
+
 		}
 	}
 
@@ -186,9 +250,35 @@ func eval(sexp interface{}, env *Env) interface{} {
 }
 
 func main() {
-	s := "(insofaras 0 3.14 4.13)"
-	sexp, _ := parseSexp(splitByRegex(tokenize(s), "\\s+")).(*list.List)
+	// s := "(yknow make-two (bring-me-back-something-good (a) 2))"
+	// s2 := "(+ 3 7)"
+	// sexp := parseSexp(splitByRegex(tokenize(s), "\\s+"))
+	// sexp2 := parseSexp(splitByRegex(tokenize(s2), "\\s+"))
 
-	fmt.Println(eval(sexp, NewEnv()))
+	globalEnv := NewEnv()
+
+	globalEnv.Dict["+"] = func(args ...interface{}) interface{} {
+		// TODO: Implment type safety here!
+		a, _ := args[0].(int64)
+		b, _ := args[1].(int64)
+
+		return a + b
+	};
+
+	in := bufio.NewReader(os.Stdin)
+
+	for true {
+		fmt.Print("golftalk~$ ")
+		line, _ := in.ReadString('\n')
+		if line != "" && line != "\n" {
+			result := eval(parseSexp(splitByRegex(tokenize(line), "\\s+")), globalEnv)
+			if result != nil {
+				fmt.Println(result)
+			}
+		}
+	}
+
+	// fmt.Println(eval(sexp, globalEnv))
+	// fmt.Println(sexpToString(eval(sexp2, globalEnv)))
 }
 
