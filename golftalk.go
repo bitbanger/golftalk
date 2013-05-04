@@ -91,7 +91,7 @@ func splitByRegex(str, regex string) *list.List {
 func atomize(str string) interface{} {
 	// First, try to atomize it as an integer
 	if i, err := strconv.ParseInt(str, 10, 32); err == nil {
-		return i
+		return int(i)
 	}
 
 	// That didn't work? Maybe it's a float
@@ -128,7 +128,7 @@ func parseSexp(tokens *list.List) interface{} {
 }
 
 func sexpToString(sexp interface{}) string {
-	if i, ok := sexp.(int64); ok {
+	if i, ok := sexp.(int); ok {
 		return fmt.Sprintf("%d", i)
 	}
 
@@ -167,7 +167,6 @@ func eval(val interface{}, env *Env) (interface{}, string) {
 	if symbol, ok := sexp.(string); ok {
 		lookupEnv := env.Find(symbol)
 		if lookupEnv != nil {
-			fmt.Println(lookupEnv.Dict[symbol])
 			return eval(lookupEnv.Dict[symbol], env)
 		} else {
 			return nil, fmt.Sprintf("'%s' not found in scope chain.", symbol)
@@ -193,7 +192,7 @@ func eval(val interface{}, env *Env) (interface{}, string) {
 					return nil, testErr
 				}
 				
-				result, wasInt := evalTest.(int64)
+				result, wasInt := evalTest.(int)
 				
 				if !wasInt {
 					return nil, "Test given to conditional evaluated as a non-integer."
@@ -292,8 +291,8 @@ func eval(val interface{}, env *Env) (interface{}, string) {
 
 func initGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["+"] = func(args ...interface{}) (interface{}, string) {
-		a, aok := args[0].(int64)
-		b, bok := args[1].(int64)
+		a, aok := args[0].(int)
+		b, bok := args[1].(int)
 		
 		if !aok || !bok {
 			return nil, "Invalid types to add. Must be int and int."
@@ -303,8 +302,8 @@ func initGlobalEnv(globalEnv *Env) {
 	}
 	
 	globalEnv.Dict["-"] = func(args ...interface{}) (interface{}, string) {
-		a, aok := args[0].(int64)
-		b, bok := args[1].(int64)
+		a, aok := args[0].(int)
+		b, bok := args[1].(int)
 		
 		if !aok || !bok {
 			return nil, "Invalid types to subtract. Must be int and int."
@@ -314,8 +313,8 @@ func initGlobalEnv(globalEnv *Env) {
 	}
 	
 	globalEnv.Dict["*"] = func(args ...interface{}) (interface{}, string) {
-		a, aok := args[0].(int64)
-		b, bok := args[1].(int64)
+		a, aok := args[0].(int)
+		b, bok := args[1].(int)
 		
 		if !aok || !bok {
 			return nil, "Invalid types to multiply. Must be int and int."
@@ -325,8 +324,8 @@ func initGlobalEnv(globalEnv *Env) {
 	}
 	
 	globalEnv.Dict["/"] = func(args ...interface{}) (interface{}, string) {
-		a, aok := args[0].(int64)
-		b, bok := args[1].(int64)
+		a, aok := args[0].(int)
+		b, bok := args[1].(int)
 		
 		if !aok || !bok {
 			return nil, "Invalid types to divide. Must be int and int."
@@ -355,8 +354,8 @@ func initGlobalEnv(globalEnv *Env) {
 	}
 	
 	globalEnv.Dict["and"] = func(args ...interface{}) (interface{}, string) {
-		a, aok := args[0].(int64)
-		b, bok := args[1].(int64)
+		a, aok := args[0].(int)
+		b, bok := args[1].(int)
 		
 		if !aok || !bok {
 			return nil, "Invalid types to compare. Must be int and int."
@@ -370,7 +369,7 @@ func initGlobalEnv(globalEnv *Env) {
 	}
 	
 	globalEnv.Dict["not"] = func(args ...interface{}) (interface{}, string) {
-		a, aok := args[0].(int64)
+		a, aok := args[0].(int)
 		
 		if !aok {
 			return nil, "Invalid type to invert. Must be int."
@@ -392,8 +391,8 @@ func initGlobalEnv(globalEnv *Env) {
 	}
 	
 	globalEnv.Dict["<"] = func(args ...interface{}) (interface{}, string) {
-		a, aok := args[0].(int64)
-		b, bok := args[1].(int64)
+		a, aok := args[0].(int)
+		b, bok := args[1].(int)
 		
 		if !aok || !bok {
 			return nil, "Invalid types to compare. Must be int and int."
