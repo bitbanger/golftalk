@@ -26,7 +26,7 @@ func evalExpectInt64(t *testing.T, expr string, expect int64, env *Env) {
 }
 
 func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
-	x, err := evalString(expr, env)
+	x, err := eval(expr, env)
 	if err == "" {
 		t.Errorf("%s gives %v, want error: %s\n", expr, x, expect)
 		return
@@ -46,7 +46,7 @@ func TestAddition(t *testing.T) {
 	evalExpectInt64(t, "(+ (+ 1 2) (+ 3 4))", 10, addEnv)
 	evalExpectInt64(t, "(+ 1)", 1, addEnv)
 	evalExpectInt64(t, "(+)", 0, addEnv)
-	evalExpectError(t, "(+ hi there)", "Invalid types to add. Must be int and int.", addEnv)
+	evalExpectError(t, "(+ hi there)", "Invalid types to add. Must all be int.", addEnv)
 }
 
 func TestSubtraction(t *testing.T) {
