@@ -58,5 +58,5 @@ func TestSubtraction(t *testing.T) {
 	evalExpectInt64(t, "(- (- 1 2) (- 3 4))", 0, env)
 	evalExpectInt64(t,"(- 5 )", -5, env)
 	evalExpectError(t,"(-)", "Need at least 1 int to subtract.", env)
-	evalExpectError(t, "(- go away)", "Invalid types to subtract. Must be int and int.", env)
+	evalExpectError(t, "(- go away)", "Invalid types to subtract. Must all be int.", env)
 }
