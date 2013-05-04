@@ -26,7 +26,7 @@ func evalExpectInt64(t *testing.T, expr string, expect int64, env *Env) {
 }
 
 func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
-	x, err := evalString(expr, env)
+	x, err := eval(expr, env)
 	if err == "" {
 		t.Errorf("%s gives %v, want error: %s\n", expr, x, expect)
 		return
