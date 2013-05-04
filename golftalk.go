@@ -291,14 +291,15 @@ func eval(val interface{}, env *Env) (interface{}, string) {
 
 func initGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["+"] = func(args ...interface{}) (interface{}, string) {
-		a, aok := args[0].(int)
-		b, bok := args[1].(int)
-		
-		if !aok || !bok {
-			return nil, "Invalid types to add. Must be int and int."
+		accumulator := int(0)
+		for _, val := range args {
+			i, ok := val.(int)
+			if !ok {
+				return nil, "Invalid types to add. Must all be int."
+			}
+			accumulator += i
 		}
-
-		return a + b, ""
+		return accumulator, ""
 	}
 	
 	globalEnv.Dict["-"] = func(args ...interface{}) (interface{}, string) {

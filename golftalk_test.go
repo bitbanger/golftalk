@@ -46,7 +46,7 @@ func TestAddition(t *testing.T) {
 	evalExpectInt64(t, "(+ (+ 1 2) (+ 3 4))", 10, addEnv)
 	evalExpectInt64(t, "(+ 1)", 1, addEnv)
 	evalExpectInt64(t, "(+)", 0, addEnv)
-	evalExpectError(t, "(+ hi there)", "Invalid types to add. Must be int and int.", addEnv)
+	evalExpectError(t, "(+ hi there)", "Invalid types to add. Must all be int.", addEnv)
 }
 
 func TestSubtraction(t *testing.T) {
