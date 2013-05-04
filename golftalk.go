@@ -154,13 +154,21 @@ func sexpToString(sexp interface{}) string {
 	return ""
 }
 
-func eval(sexp interface{}, env *Env) (interface{}, string) {
+func eval(val interface{}, env *Env) (interface{}, string) {
+	// Make sure the value is an S-expression
+	sexp := val
+	valStr, wasStr := val.(string)
+	if wasStr {
+		sexp = parseSexp(splitByRegex(tokenize(valStr), "\\s+"))
+	}
+	
 	// Is the sexp just a symbol?
-	// If so, let's look it up!
+	// If so, let's look it up and evaluate it!
 	if symbol, ok := sexp.(string); ok {
 		lookupEnv := env.Find(symbol)
 		if lookupEnv != nil {
-			return lookupEnv.Dict[symbol], ""
+			fmt.Println(lookupEnv.Dict[symbol])
+			return eval(lookupEnv.Dict[symbol], env)
 		} else {
 			return nil, fmt.Sprintf("'%s' not found in scope chain.", symbol)
 		}
@@ -257,10 +265,16 @@ func eval(sexp interface{}, env *Env) (interface{}, string) {
 				args := make([]interface{}, lst.Len() - 1)
 				for i := range args {
 					// TODO: Do we really need to evaluate here?
+					// Lazy evaluation seems to be the way to go, but then wouldn't we have to evaluate arguments in a more limited scope?
 					args[i], _ = eval(get(lst, i + 1), env)
 				}
 				
-				evalFunc, _ := eval(get(lst, 0), env)
+				evalFunc, funcErr := eval(get(lst, 0), env)
+				
+				if funcErr != "" {
+					return nil, funcErr
+				}
+				
 				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 				if wasFunc {
 					return proc(args...)
@@ -324,6 +338,78 @@ func initGlobalEnv(globalEnv *Env) {
 
 		return a / b, ""
 	}
+	
+	globalEnv.Dict["or"] = func(args ...interface{}) (interface{}, string) {
+		a, aok := args[0].(int)
+		b, bok := args[1].(int)
+		
+		if !aok || !bok {
+			return nil, fmt.Sprintf("Invalid types to compare. Must be int and int. Got %d and %d", a, b)
+		}
+		
+		if a > 0 || b > 0 {
+			return 1, ""
+		}
+		
+		return 0, ""
+	}
+	
+	globalEnv.Dict["and"] = func(args ...interface{}) (interface{}, string) {
+		a, aok := args[0].(int64)
+		b, bok := args[1].(int64)
+		
+		if !aok || !bok {
+			return nil, "Invalid types to compare. Must be int and int."
+		}
+		
+		if a > 0 && b > 0 {
+			return 1, ""
+		}
+		
+		return 0, ""
+	}
+	
+	globalEnv.Dict["not"] = func(args ...interface{}) (interface{}, string) {
+		a, aok := args[0].(int64)
+		
+		if !aok {
+			return nil, "Invalid type to invert. Must be int."
+		}
+		
+		if a > 0 {
+			return 0, ""
+		}
+		
+		return 1, ""
+	}
+	
+	globalEnv.Dict["eq?"] = func(args ...interface{}) (interface{}, string) {
+		if args[0] == args[1] {
+			return 1, ""
+		}
+		
+		return 0, ""
+	}
+	
+	globalEnv.Dict["<"] = func(args ...interface{}) (interface{}, string) {
+		a, aok := args[0].(int64)
+		b, bok := args[1].(int64)
+		
+		if !aok || !bok {
+			return nil, "Invalid types to compare. Must be int and int."
+		}
+
+		if a < b {
+			return 1, ""
+		}
+		
+		return 0, ""
+	}
+	
+	// Neat!
+	globalEnv.Dict[">"] = "(bring-me-back-something-good (a b) (< b a))"
+	globalEnv.Dict["<="] = "(bring-me-back-something-good (a b) (or (< a b) (eq? a b)))"
+	globalEnv.Dict[">="] = "(bring-me-back-something-good (a b) (or (> a b) (eq? a b)))"
 }
 
 func main() {
@@ -345,7 +431,7 @@ func main() {
 			}
 		}
 		if line != "" && line != "\n" {
-			result, evalErr := eval(parseSexp(splitByRegex(tokenize(line), "\\s+")), globalEnv)
+			result, evalErr := eval(line, globalEnv)
 			
 			if evalErr != "" {
 				fmt.Printf("No.\n\t%s\n", evalErr)
