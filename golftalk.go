@@ -11,14 +11,9 @@ import (
 	"io"
 )
 
-// TODO: Is this really the best way to do this recursive type embedding thing?
-type Environment interface {
-	Find(string) *Env
-}
-
 type Env struct {
 	Dict map[string]interface{}
-	Outer Environment
+	Outer *Env
 }
 
 func (e Env) Find(val string) *Env {
@@ -78,14 +73,10 @@ func splitByRegex(str, regex string) *list.List {
 	re := regexp.MustCompile(regex)
 	matches := re.FindAllStringIndex(str, -1)
 
-	// Worst case, this is one greater than the number of matches
-	// result := make([]string, len(matches) + 1)
-
 	result := list.New()
 
 	start := 0
 	for _, match := range matches {
-		// result[i] = str[start:match[0]]
 		result.PushBack(str[start:match[0]])
 		start = match[1]
 
@@ -104,9 +95,9 @@ func atomize(str string) interface{} {
 	}
 
 	// That didn't work? Maybe it's a float
-	if f, err := strconv.ParseFloat(str, 32); err == nil {
-		return f
-	}
+	// if f, err := strconv.ParseFloat(str, 32); err == nil {
+	// 	return f
+	// }
 
 	// Fuck it; it's a string
 	return str
@@ -141,9 +132,9 @@ func sexpToString(sexp interface{}) string {
 		return fmt.Sprintf("%d", i)
 	}
 
-	if f, ok := sexp.(float64); ok {
-		return fmt.Sprintf("%f", f)
-	}
+	// if f, ok := sexp.(float64); ok {
+	// 	return fmt.Sprintf("%f", f)
+	// }
 
 	if s, ok := sexp.(string); ok {
 		return s
@@ -188,9 +179,7 @@ func eval(sexp interface{}, env *Env) interface{} {
 				conseq := get(lst, 2)
 				alt := get(lst, 3)
 
-				result, wasInt := eval(test, env).(int64)
-
-				if wasInt && result > 0 {
+				if result, wasInt := eval(test, env).(int64); wasInt && result > 0 {
 					return eval(conseq, env)
 				} else {
 					return eval(alt, env)
@@ -253,17 +242,16 @@ func eval(sexp interface{}, env *Env) interface{} {
 }
 
 func main() {
-	// s := "(yknow make-two (bring-me-back-something-good (a) 2))"
-	// s2 := "(+ 3 7)"
-	// sexp := parseSexp(splitByRegex(tokenize(s), "\\s+"))
-	// sexp2 := parseSexp(splitByRegex(tokenize(s2), "\\s+"))
-
 	globalEnv := NewEnv()
 
 	globalEnv.Dict["+"] = func(args ...interface{}) interface{} {
-		// TODO: Implment type safety here!
-		a, _ := args[0].(int64)
-		b, _ := args[1].(int64)
+		a, aok := args[0].(int64)
+		b, bok := args[1].(int64)
+		
+		if !aok || !bok {
+			fmt.Println("No.\n\tInvalid types.")
+			return nil
+		}
 
 		return a + b
 	};
@@ -275,10 +263,10 @@ func main() {
 		line, err := in.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println() //end line with prompt on it
-				break //We should end the REPL if EOF is reached
+				fmt.Println()
+				break
 			} else {
-				panic(err) //something went wrong...
+				panic(err)
 			}
 		}
 		if line != "" && line != "\n" {
@@ -288,8 +276,4 @@ func main() {
 			}
 		}
 	}
-
-	// fmt.Println(eval(sexp, globalEnv))
-	// fmt.Println(sexpToString(eval(sexp2, globalEnv)))
 }
-
