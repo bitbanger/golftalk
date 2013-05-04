@@ -5,6 +5,11 @@ import "testing"
 var emptyEnv *Env = NewEnv()
 
 func evalExpectInt(t *testing.T, expr string, expect int, env *Env) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(expr, "gives panic:", r)
+		}
+	}()
 	x, err := Eval(expr, env)
 	if err != "" {
 		t.Error(expr, "gives error:", err)
@@ -26,6 +31,11 @@ func evalExpectInt(t *testing.T, expr string, expect int, env *Env) {
 }
 
 func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(expr, "gives panic:", r)
+		}
+	}()
 	x, err := Eval(expr, env)
 	if err == "" {
 		t.Errorf("%s gives %v, want error: %s\n", expr, x, expect)
