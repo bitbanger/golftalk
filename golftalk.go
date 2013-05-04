@@ -154,16 +154,15 @@ func sexpToString(sexp interface{}) string {
 	return ""
 }
 
-func eval(sexp interface{}, env *Env) interface{} {
+func eval(sexp interface{}, env *Env) (interface{}, string) {
 	// Is the sexp just a symbol?
 	// If so, let's look it up!
 	if symbol, ok := sexp.(string); ok {
 		lookupEnv := env.Find(symbol)
 		if lookupEnv != nil {
-			return lookupEnv.Dict[symbol]
+			return lookupEnv.Dict[symbol], ""
 		} else {
-			fmt.Printf("No.\n\t'%s' is an unresolvable symbol.\n", symbol)
-			return nil
+			return nil, fmt.Sprintf("'%s' not found in scope chain.", symbol)
 		}
 	}
 
@@ -178,8 +177,19 @@ func eval(sexp interface{}, env *Env) interface{} {
 				test := get(lst, 1)
 				conseq := get(lst, 2)
 				alt := get(lst, 3)
-
-				if result, wasInt := eval(test, env).(int64); wasInt && result > 0 {
+				
+				
+				evalTest, testErr := eval(test, env)
+				
+				if testErr != "" {
+					return nil, testErr
+				}
+				
+				result, wasInt := evalTest.(int64)
+				
+				if !wasInt {
+					return nil, "Test given to conditional evaluated as a non-integer."
+				} else if result > 0 {
 					return eval(conseq, env)
 				} else {
 					return eval(alt, env)
@@ -191,25 +201,48 @@ func eval(sexp interface{}, env *Env) interface{} {
 					literal.PushBack(e.Value)
 				}
 
-				return literal
+				return literal, ""
 			case "yknow":
-				sym, _ := get(lst, 1).(string)
+				sym, wasStr := get(lst, 1).(string)
 				symExp := get(lst, 2)
-
-				env.Dict[sym] = eval(symExp, env)
-				return nil
+				
+				if !wasStr {
+					return nil, "Symbol given to define wasn't a string."
+				}
+				
+				// TODO: Is there an elegant way to do this?
+				evalErr := ""
+				env.Dict[sym], evalErr = eval(symExp, env)
+				
+				return nil, evalErr
 			case "apply":
-				proc, _ := eval(get(lst, 1), env).(func(args ...interface{}) interface{})
-				args, _ := eval(get(lst, 2), env).(*list.List)
+				evalFunc, _ := eval(get(lst, 1), env)
+				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
+				evalList, _ := eval(get(lst, 2), env)
+				args, wasList := evalList.(*list.List)
+				
+				if !wasFunc {
+					return nil, "Function given to apply doesn't evaluate as a function."
+				}
+				
+				if !wasList {
+					return nil, "List given to apply doesn't evaluate as a list."
+				}
+				
 				argArr := toSlice(args)
 				return proc(argArr...)
 			case "bring-me-back-something-good":
-				vars, _ := get(lst, 1).(*list.List)
+				vars, wasList := get(lst, 1).(*list.List)
 				exp := get(lst, 2)
+				
+				if !wasList {
+					return nil, "Symbol list to bind within lambda wasn't a list."
+				}
 
-				return func(args ...interface{}) interface{} {
+				return func(args ...interface{}) (interface{}, string) {
 					lambVars := make([]string, vars.Len())
 					for i := range lambVars {
+						// Outer scope handles possible non-string bindables
 						lambVar, _ := get(vars, i).(string)
 						lambVars[i] = lambVar
 					}
@@ -217,20 +250,22 @@ func eval(sexp interface{}, env *Env) interface{} {
 					newEnv := MakeEnv(lambVars, args, env)
 
 					return eval(exp, newEnv)
-				};
+				}, ""
 			case "exit":
 				os.Exit(0)
 			default:
 				args := make([]interface{}, lst.Len() - 1)
 				for i := range args {
-					args[i] = eval(get(lst, i + 1), env)
+					// TODO: Do we really need to evaluate here?
+					args[i], _ = eval(get(lst, i + 1), env)
 				}
-
-				proc, wasFunc := eval(get(lst, 0), env).(func(args ...interface{}) interface{})
+				
+				evalFunc, _ := eval(get(lst, 0), env)
+				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 				if wasFunc {
 					return proc(args...)
 				} else {
-					fmt.Printf("No.\n\t'%s' is not a valid function.\n", get(lst, 0))
+					return nil, "Function to execute was not a valid function."
 				}
 
 		}
@@ -238,23 +273,63 @@ func eval(sexp interface{}, env *Env) interface{} {
 
 	// No other choices left; the sexp must be a literal.
 	// Let's just return it!
-	return sexp
+	return sexp, ""
+}
+
+func initGlobalEnv(globalEnv *Env) {
+	globalEnv.Dict["+"] = func(args ...interface{}) (interface{}, string) {
+		a, aok := args[0].(int64)
+		b, bok := args[1].(int64)
+		
+		if !aok || !bok {
+			return nil, "Invalid types to add. Must be int and int."
+		}
+
+		return a + b, ""
+	}
+	
+	globalEnv.Dict["-"] = func(args ...interface{}) (interface{}, string) {
+		a, aok := args[0].(int64)
+		b, bok := args[1].(int64)
+		
+		if !aok || !bok {
+			return nil, "Invalid types to subtract. Must be int and int."
+		}
+
+		return a - b, ""
+	}
+	
+	globalEnv.Dict["*"] = func(args ...interface{}) (interface{}, string) {
+		a, aok := args[0].(int64)
+		b, bok := args[1].(int64)
+		
+		if !aok || !bok {
+			return nil, "Invalid types to multiply. Must be int and int."
+		}
+
+		return a * b, ""
+	}
+	
+	globalEnv.Dict["/"] = func(args ...interface{}) (interface{}, string) {
+		a, aok := args[0].(int64)
+		b, bok := args[1].(int64)
+		
+		if !aok || !bok {
+			return nil, "Invalid types to divide. Must be int and int."
+		}
+		
+		if b == 0 {
+			return nil, "Division by zero is currently unsupported."
+		}
+
+		return a / b, ""
+	}
 }
 
 func main() {
 	globalEnv := NewEnv()
 
-	globalEnv.Dict["+"] = func(args ...interface{}) interface{} {
-		a, aok := args[0].(int64)
-		b, bok := args[1].(int64)
-		
-		if !aok || !bok {
-			fmt.Println("No.\n\tInvalid types.")
-			return nil
-		}
-
-		return a + b
-	};
+	initGlobalEnv(globalEnv)
 
 	in := bufio.NewReader(os.Stdin)
 
@@ -270,7 +345,13 @@ func main() {
 			}
 		}
 		if line != "" && line != "\n" {
-			result := eval(parseSexp(splitByRegex(tokenize(line), "\\s+")), globalEnv)
+			result, evalErr := eval(parseSexp(splitByRegex(tokenize(line), "\\s+")), globalEnv)
+			
+			if evalErr != "" {
+				fmt.Printf("No.\n\t%s\n", evalErr)
+				continue
+			}
+			
 			if result != nil {
 				fmt.Println(result)
 			}
