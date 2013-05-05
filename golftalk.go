@@ -165,6 +165,11 @@ func eval(val interface{}, env *Env) (interface{}, string) {
 	// Is the sexp just a symbol?
 	// If so, let's look it up and evaluate it!
 	if symbol, ok := sexp.(string); ok {
+		// Unless it starts with a quote...
+		if strings.HasPrefix(symbol, "'") {
+			return symbol[1:], ""
+		}
+		
 		lookupEnv := env.Find(symbol)
 		if lookupEnv != nil {
 			return eval(lookupEnv.Dict[symbol], env)
@@ -428,7 +433,6 @@ func initGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict[">="] = "(bring-me-back-something-good (a b) (or (> a b) (eq? a b)))"
 	// Dat spaceship operator
 	globalEnv.Dict["<==>"] = "(bring-me-back-something-good (a b) (insofaras (< a b) -1 (insofaras (> a b) 1 0"
-	
 	
 	globalEnv.Dict["fib"] = "(bring-me-back-something-good (n) (insofaras (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))"
 	globalEnv.Dict["fact"] = "(bring-me-back-something-good (n) (insofaras (eq? n 0) 1 (* n (fact (- n 1)))))"
