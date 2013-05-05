@@ -261,17 +261,17 @@ func eval(val interface{}, env *Env) (interface{}, string) {
 			case "exit":
 				os.Exit(0)
 			default:
+				evalFunc, funcErr := eval(get(lst, 0), env)
+				
+				if funcErr != "" {
+					return nil, funcErr
+				}
+				
 				args := make([]interface{}, lst.Len() - 1)
 				for i := range args {
 					// TODO: Do we really need to evaluate here?
 					// Lazy evaluation seems to be the way to go, but then wouldn't we have to evaluate arguments in a more limited scope?
 					args[i], _ = eval(get(lst, i + 1), env)
-				}
-				
-				evalFunc, funcErr := eval(get(lst, 0), env)
-				
-				if funcErr != "" {
-					return nil, funcErr
 				}
 				
 				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
