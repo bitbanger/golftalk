@@ -291,7 +291,7 @@ func eval(val interface{}, env *Env) (interface{}, string) {
 
 func initGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["+"] = func(args ...interface{}) (interface{}, string) {
-		accumulator := int(0)
+		accumulator := 0
 		for _, val := range args {
 			i, ok := val.(int)
 			if !ok {
@@ -304,17 +304,17 @@ func initGlobalEnv(globalEnv *Env) {
 	
 	globalEnv.Dict["-"] = func(args ...interface{}) (interface{}, string) {
 		switch len(args) {
-		case 0:
-			return nil, "Need at least 1 int to subtract."
-		case 1:
-			val, ok := args[0].(int)
-			if !ok {
-				return nil, "Invalid types to subtract. Must all be int."
-			}
-			return 0 - val, ""
+			case 0:
+				return nil, "Need at least 1 int to subtract."
+			case 1:
+				val, ok := args[0].(int)
+				if !ok {
+					return nil, "Invalid types to subtract. Must all be int."
+				}
+				return 0 - val, ""
 		}
 
-		accumulator := int(0)
+		accumulator := 0
 		for idx, val := range args {
 			i, ok := val.(int)
 			if !ok {
