@@ -410,6 +410,13 @@ func initGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict[">"] = "(bring-me-back-something-good (a b) (< b a))"
 	globalEnv.Dict["<="] = "(bring-me-back-something-good (a b) (or (< a b) (eq? a b)))"
 	globalEnv.Dict[">="] = "(bring-me-back-something-good (a b) (or (> a b) (eq? a b)))"
+	// Dat spaceship operator
+	globalEnv.Dict["<==>"] = "(bring-me-back-something-good (a b) (insofaras (< a b) -1 (insofaras (> a b) 1 0"
+	
+	
+	globalEnv.Dict["fib"] = "(bring-me-back-something-good (n) (insofaras (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))"
+	// TODO: If the first part of this is spelled "bring-me-back-somethin-good" (misspelled something), the call hangs forever....
+	globalEnv.Dict["fact"] = "(bring-me-back-somethin-good (n) (insofaras (eq? n 0) 1 (* n (fact (- n 1)))))"
 }
 
 func main() {
