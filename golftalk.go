@@ -303,14 +303,30 @@ func initGlobalEnv(globalEnv *Env) {
 	}
 	
 	globalEnv.Dict["-"] = func(args ...interface{}) (interface{}, string) {
-		a, aok := args[0].(int)
-		b, bok := args[1].(int)
-		
-		if !aok || !bok {
-			return nil, "Invalid types to subtract. Must be int and int."
+		switch len(args) {
+		case 0:
+			return nil, "Need at least 1 int to subtract."
+		case 1:
+			val, ok := args[0].(int)
+			if !ok {
+				return nil, "Invalid types to subtract. Must all be int."
+			}
+			return 0 - val, ""
 		}
 
-		return a - b, ""
+		accumulator := int(0)
+		for idx, val := range args {
+			i, ok := val.(int)
+			if !ok {
+				return nil, "Invalid types to subtract. Must all be int."
+			}
+			if idx == 0 {
+				accumulator += i
+			} else {
+				accumulator -= i
+			}
+		}
+		return accumulator, ""
 	}
 	
 	globalEnv.Dict["*"] = func(args ...interface{}) (interface{}, string) {
