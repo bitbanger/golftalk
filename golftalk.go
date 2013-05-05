@@ -415,8 +415,7 @@ func initGlobalEnv(globalEnv *Env) {
 	
 	
 	globalEnv.Dict["fib"] = "(bring-me-back-something-good (n) (insofaras (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))"
-	// TODO: If the first part of this is spelled "bring-me-back-somethin-good" (misspelled something), the call hangs forever....
-	globalEnv.Dict["fact"] = "(bring-me-back-somethin-good (n) (insofaras (eq? n 0) 1 (* n (fact (- n 1)))))"
+	globalEnv.Dict["fact"] = "(bring-me-back-something-good (n) (insofaras (eq? n 0) 1 (* n (fact (- n 1)))))"
 }
 
 func main() {
