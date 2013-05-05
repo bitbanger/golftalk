@@ -210,7 +210,13 @@ func eval(val interface{}, env *Env) (interface{}, string) {
 				literal := list.New()
 
 				for e := lst.Front().Next(); e != nil; e = e.Next() {
-					literal.PushBack(e.Value)
+					val, valErr := eval(e.Value, env)
+					
+					if valErr != "" {
+						return nil, valErr
+					}
+					
+					literal.PushBack(val)
 				}
 
 				return literal, ""
@@ -465,7 +471,7 @@ func main() {
 			}
 			
 			if result != nil {
-				fmt.Println(result)
+				fmt.Println(sexpToString(result))
 			}
 		}
 	}
