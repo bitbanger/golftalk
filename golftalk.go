@@ -11,11 +11,14 @@ import (
 	"io"
 )
 
+// Env represents an "environment": a scope's mapping of symbol strings to values.
+// Env also provides the ability to search up a scope chain for a value.
 type Env struct {
 	Dict map[string]interface{}
 	Outer *Env
 }
 
+// Find returns the closest parent scope with an extant mapping between a given symbol and any value.
 func (e Env) Find(val string) *Env {
 	if e.Dict[val] != nil {
 		return &e
@@ -26,12 +29,14 @@ func (e Env) Find(val string) *Env {
 	return nil
 }
 
+// NewEnv returns an initialized environment.
 func NewEnv() *Env {
 	env := &Env{}
 	env.Dict = make(map[string]interface{})
 	return env
 }
 
+// MakeEnv returns an environment initialized with two parallel symbol-value slices and a parent environment pointer.
 func MakeEnv(keys []string, vals []interface{}, outer *Env) *Env {
 	env := &Env{}
 	env.Dict = make(map[string]interface{})
@@ -45,6 +50,7 @@ func MakeEnv(keys []string, vals []interface{}, outer *Env) *Env {
 	return env
 }
 
+// get is a simple utility function to get the nth item from a linked list.
 func get(lst *list.List, n int) interface{} {
 	obj := lst.Front()
 
@@ -55,6 +61,7 @@ func get(lst *list.List, n int) interface{} {
 	return obj.Value
 }
 
+// toSlice converts a linked list into a slice.
 func toSlice(lst *list.List) []interface{} {
 	slice := make([]interface{}, lst.Len())
 	i := 0
@@ -65,10 +72,12 @@ func toSlice(lst *list.List) []interface{} {
 	return slice
 }
 
+// tokenize returns a string with all parentheses separated by whitespace, and all leading and trailing whitespace removed.
 func tokenize(s string) string {
 	return strings.Trim(strings.Replace(strings.Replace(s, "(", " ( ", -1), ")", " ) ", -1), " ")
 }
 
+// splitByRegex takes a string to split and a regular expression, and returns a linked list of all substrings separated by strings matching the provided regex.
 func splitByRegex(str, regex string) *list.List {
 	re := regexp.MustCompile(regex)
 	matches := re.FindAllStringIndex(str, -1)
@@ -87,7 +96,8 @@ func splitByRegex(str, regex string) *list.List {
 	return result
 }
 
-// And here's where we abandon type safety...
+// atomize infers the data type of a raw string and returns the string converted to this type.
+// If it fails to safely convert the string, it simply returns it as a string again.
 func atomize(str string) interface{} {
 	// First, try to atomize it as an integer
 	if i, err := strconv.ParseInt(str, 10, 32); err == nil {
@@ -103,6 +113,28 @@ func atomize(str string) interface{} {
 	return str
 }
 
+// isBalanced determines if a string has balanced parentheses.
+// This should be used to clean data in the REPL stage before it's parsed.
+func isBalanced(line string) bool {
+	val := 0
+	for _, c := range line {
+		if c == 40 {
+			val++
+		} else if c == 41 {
+			val--
+		}
+		
+		if val < 0 {
+			return false
+		}
+	}
+	
+	return val == 0
+}
+
+// parseSexp takes a linked list of tokens, including parentheses, and uses the parentheses to "un-flatten" the list.
+// The result is a recursively nested set of lists representing the structure of the S-expression.
+// Note: the list is expected to have balanced parentheses.
 func parseSexp(tokens *list.List) interface{} {
 	token, _ := tokens.Remove(tokens.Front()).(string)
 
@@ -117,9 +149,6 @@ func parseSexp(tokens *list.List) interface{} {
 		}
 		tokens.Remove(tokens.Front())
 		return sexp
-	} else if token == ")" {
-		fmt.Println("Unexpected )")
-		return nil
 	} else {
 		return atomize(token)
 	}
@@ -127,6 +156,7 @@ func parseSexp(tokens *list.List) interface{} {
 	return nil
 }
 
+// sexpToString takes a parsed S-expression and returns a string representation, suitable for printing.
 func sexpToString(sexp interface{}) string {
 	if i, ok := sexp.(int); ok {
 		return fmt.Sprintf("%d", i)
@@ -154,6 +184,10 @@ func sexpToString(sexp interface{}) string {
 	return ""
 }
 
+// eval takes an S-expression and an environment, and returns the most simplified equivalent S-expression.
+// Possible ways to simplify an S-expression include returning a literal value if the input was simply that literal value, looking up a symbol in the given environment (and its implied scope chain), and interpreting the S-expression as a function invocation.
+// In the lattermost of evaluation strategies, the function may be provided as a literal or as a symbol referring to a function in the given scope chain; in other words, the first argument has eval recursively applied to it and must yield a function.
+// If an error occurs at any point in the evaluation, eval returns an error string, and the returned value should be disregarded.
 func eval(val interface{}, env *Env) (interface{}, string) {
 	// Make sure the value is an S-expression
 	sexp := val
@@ -300,6 +334,7 @@ func eval(val interface{}, env *Env) (interface{}, string) {
 	return sexp, ""
 }
 
+// initGlobalEnv initializes the hierarchichal "root" environment with a few built-in functions.
 func initGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["+"] = func(args ...interface{}) (interface{}, string) {
 		accumulator := 0
@@ -454,6 +489,7 @@ func main() {
 	for true {
 		fmt.Print("golftalk~$ ")
 		line, err := in.ReadString('\n')
+		
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println()
@@ -462,6 +498,12 @@ func main() {
 				panic(err)
 			}
 		}
+		
+		if !isBalanced(line) {
+			fmt.Println("No.\n\tUnbalanced parentheses.")
+			continue
+		}
+		
 		if line != "" && line != "\n" {
 			result, evalErr := eval(line, globalEnv)
 			
