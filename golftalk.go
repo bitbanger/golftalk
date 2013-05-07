@@ -181,8 +181,8 @@ func SexpToString(sexp interface{}) string {
 
 // Eval takes an S-expression and an environment, and returns the most simplified equivalent S-expression.
 // Possible ways to simplify an S-expression include returning a literal value if the input was simply that literal value, looking up a symbol in the given environment (and its implied scope chain), and interpreting the S-expression as a function invocation.
-// In the lattermost of Evaluation strategies, the function may be provided as a literal or as a symbol referring to a function in the given scope chain; in other words, the first argument has Eval recursively applied to it and must yield a function.
-// If an error occurs at any point in the Evaluation, Eval returns an error string, and the returned value should be disregarded.
+// In the lattermost of evaluation strategies, the function may be provided as a literal or as a symbol referring to a function in the given scope chain; in other words, the first argument has Eval recursively applied to it and must yield a function.
+// If an error occurs at any point in the evaluation, Eval returns an error string, and the returned value should be disregarded.
 func Eval(val interface{}, env *Env) (interface{}, string) {
 	// Make sure the value is an S-expression
 	sexp := val
@@ -193,7 +193,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 	}
 	
 	// Is the sexp just a symbol?
-	// If so, let's look it up and Evaluate it!
+	// If so, let's look it up and evaluate it!
 	if symbol, ok := sexp.(string); ok {
 		// Unless it starts with a quote...
 		if strings.HasPrefix(symbol, "'") {
@@ -211,6 +211,11 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 	// Is the sexp just a list?
 	// If so, let's apply the first symbol as a function to the rest of it!
 	if lst, ok := sexp.(*list.List); ok {
+		// ...Unless it's the empty list
+		if lst.Len() == 0 {
+			return lst, ""
+		}
+		
 		// The "car" of the list will be a symbol representing a function
 		car, _ := lst.Front().Value.(string)
 
@@ -221,16 +226,16 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				alt := Get(lst, 3)
 				
 				
-				EvalTest, testErr := Eval(test, env)
+				evalTest, testErr := Eval(test, env)
 				
 				if testErr != "" {
 					return nil, testErr
 				}
 				
-				result, wasInt := EvalTest.(int)
+				result, wasInt := evalTest.(int)
 				
 				if !wasInt {
-					return nil, "Test given to conditional Evaluated as a non-integer."
+					return nil, "Test given to conditional evaluated as a non-integer."
 				} else if result > 0 {
 					return Eval(conseq, env)
 				} else {
@@ -258,23 +263,21 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					return nil, "Symbol given to define wasn't a string."
 				}
 				
-				// TODO: Is there an elegant way to do this?
-				EvalErr := ""
-				env.Dict[sym], EvalErr = Eval(symExp, env)
+				env.Dict[sym] = symExp
 				
-				return nil, EvalErr
+				return nil, ""
 			case "apply":
-				EvalFunc, _ := Eval(Get(lst, 1), env)
-				proc, wasFunc := EvalFunc.(func(args ...interface{}) (interface{}, string))
-				EvalList, _ := Eval(Get(lst, 2), env)
-				args, wasList := EvalList.(*list.List)
+				evalFunc, _ := Eval(Get(lst, 1), env)
+				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
+				evalList, _ := Eval(Get(lst, 2), env)
+				args, wasList := evalList.(*list.List)
 				
 				if !wasFunc {
-					return nil, "Function given to apply doesn't Evaluate as a function."
+					return nil, "Function given to apply doesn't evaluate as a function."
 				}
 				
 				if !wasList {
-					return nil, "List given to apply doesn't Evaluate as a list."
+					return nil, "List given to apply doesn't evaluate as a list."
 				}
 				
 				argArr := ToSlice(args)
@@ -302,7 +305,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 			case "exit":
 				os.Exit(0)
 			default:
-				EvalFunc, funcErr := Eval(Get(lst, 0), env)
+				evalFunc, funcErr := Eval(Get(lst, 0), env)
 				
 				if funcErr != "" {
 					return nil, funcErr
@@ -310,12 +313,12 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				
 				args := make([]interface{}, lst.Len() - 1)
 				for i := range args {
-					// TODO: Do we really need to Evaluate here?
-					// Lazy Evaluation seems to be the way to go, but then wouldn't we have to Evaluate arguments in a more limited scope?
+					// TODO: Do we really need to evaluate here?
+					// Lazy evaluation seems to be the way to go, but then wouldn't we have to evaluate arguments in a more limited scope?
 					args[i], _ = Eval(Get(lst, i + 1), env)
 				}
 				
-				proc, wasFunc := EvalFunc.(func(args ...interface{}) (interface{}, string))
+				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 				if wasFunc {
 					return proc(args...)
 				} else {
@@ -449,6 +452,20 @@ func InitGlobalEnv(globalEnv *Env) {
 		return 0, ""
 	}
 	
+	globalEnv.Dict["empty?"] = func(args ...interface{}) (interface{}, string) {
+		lst, ok := args[0].(*list.List)
+		
+		if !ok {
+			return nil, "Invalid type. Can only check if a list is empty."
+		}
+		
+		if lst.Len() == 0 {
+			return 1, ""
+		}
+		
+		return 0, ""
+	}
+	
 	globalEnv.Dict["<"] = func(args ...interface{}) (interface{}, string) {
 		a, aok := args[0].(int)
 		b, bok := args[1].(int)
@@ -464,12 +481,65 @@ func InitGlobalEnv(globalEnv *Env) {
 		return 0, ""
 	}
 	
+	globalEnv.Dict["car"] = func(args ...interface{}) (interface{}, string) {
+		lst, ok := args[0].(*list.List)
+		
+		if !ok {
+			return nil, "Invalid type. Can only take the car of a list."
+		}
+		
+		if lst.Len() == 0 {
+			return nil, "Cannot take the car of an empty list."
+		}
+		
+		return lst.Front().Value, ""
+	}
+	
+	globalEnv.Dict["come-from-behind"] = func(args ...interface{}) (interface{}, string) {
+		lst, ok := args[0].(*list.List)
+		
+		if !ok {
+			return nil, "Invalid type. Can only take the cdr of a list."
+		}
+		
+		if lst.Len() == 0 {
+			return nil, "Cannot take the cdr of an empty list."
+		}
+		
+		// TODO: Implement our own S-expressions because Go lists suck
+		newList := list.New()
+		for e := lst.Front().Next(); e != nil; e = e.Next() {
+			newList.PushBack(e.Value)
+		}
+		
+		return newList, ""
+	}
+	
+	globalEnv.Dict["cons"] = func(args ...interface{}) (interface{}, string) {
+		lst, ok := args[1].(*list.List)
+		
+		if !ok {
+			return nil, "Cannot cons to a non-list."
+		}
+		
+		newList := list.New()
+		newList.PushBack(args[0])
+		for e := lst.Front(); e != nil; e = e.Next() {
+			newList.PushBack(e.Value)
+		}
+		
+		return newList, ""
+		
+	}
+	
 	// Neat!
 	globalEnv.Dict[">"] = "(bring-me-back-something-good (a b) (< b a))"
 	globalEnv.Dict["<="] = "(bring-me-back-something-good (a b) (or (< a b) (eq? a b)))"
 	globalEnv.Dict[">="] = "(bring-me-back-something-good (a b) (or (> a b) (eq? a b)))"
 	// Dat spaceship operator
 	globalEnv.Dict["<==>"] = "(bring-me-back-something-good (a b) (insofaras (< a b) -1 (insofaras (> a b) 1 0"
+	
+	globalEnv.Dict["len"] = "(bring-me-back-something-good (lst) (insofaras (empty? lst) 0 (+ 1 (len (come-from-behind lst)))))"
 	
 	globalEnv.Dict["fib"] = "(bring-me-back-something-good (n) (insofaras (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))"
 	globalEnv.Dict["fact"] = "(bring-me-back-something-good (n) (insofaras (eq? n 0) 1 (* n (fact (- n 1)))))"
@@ -501,10 +571,10 @@ func main() {
 		}
 		
 		if line != "" && line != "\n" {
-			result, EvalErr := Eval(line, globalEnv)
+			result, evalErr := Eval(line, globalEnv)
 			
-			if EvalErr != "" {
-				fmt.Printf("No.\n\t%s\n", EvalErr)
+			if evalErr != "" {
+				fmt.Printf("No.\n\t%s\n", evalErr)
 				continue
 			}
 			
