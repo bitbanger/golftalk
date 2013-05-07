@@ -70,3 +70,17 @@ func TestSubtraction(t *testing.T) {
 	evalExpectError(t,"(-)", "Need at least 1 int to subtract.", env)
 	evalExpectError(t, "(- go away)", "Invalid types to subtract. Must all be int.", env)
 }
+
+func TestIsEmpty(t *testing.T) {
+	env := NewEnv()
+	InitGlobalEnv(env)
+
+	evalExpectInt(t, "(empty? (you-folks ) )", 1, env)
+	evalExpectInt(t, "(empty? (you-folks 1) )", 0, env)
+	evalExpectInt(t, "(empty? (you-folks 1 2 3) )", 0, env)
+	evalExpectInt(t, "(empty? (come-from-behind (you-folks 1)) )", 1, env)
+
+	evalExpectError(t, "(empty? 1)", "Invalid type. Can only check if a list is empty.", env)
+	evalExpectError(t, "(empty?)", "Invalid. Expecting exactly 1 argument.", env)
+	evalExpectError(t, "(empty? (you-folks) (you-folks))", "Invalid. Expecting exactly 1 argument.", env)
+}
