@@ -5,7 +5,7 @@ import "testing"
 var emptyEnv *Env = NewEnv()
 
 func evalExpectInt(t *testing.T, expr string, expect int, env *Env) {
-	x, err := eval(expr, env)
+	x, err := Eval(expr, env)
 	if err != "" {
 		t.Error(expr, "gives error:", err)
 		return
@@ -26,7 +26,7 @@ func evalExpectInt(t *testing.T, expr string, expect int, env *Env) {
 }
 
 func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
-	x, err := eval(expr, env)
+	x, err := Eval(expr, env)
 	if err == "" {
 		t.Errorf("%s gives %v, want error: %s\n", expr, x, expect)
 		return
@@ -39,7 +39,7 @@ func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
 
 func TestAddition(t *testing.T) {
 	addEnv := NewEnv()
-	initGlobalEnv(addEnv)
+	InitGlobalEnv(addEnv)
 
 	evalExpectInt(t,"(+ -5 12)", 7, addEnv)
 	evalExpectInt(t, "(+ 7 100 99)", 206, addEnv)
@@ -51,7 +51,7 @@ func TestAddition(t *testing.T) {
 
 func TestSubtraction(t *testing.T) {
 	env := NewEnv()
-	initGlobalEnv(env)
+	InitGlobalEnv(env)
 
 	evalExpectInt(t,"(- 23 11)", 12, env)
 	evalExpectInt(t, "(- 55 90 22)", -57, env)
