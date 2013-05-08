@@ -4,9 +4,20 @@ import (
 	"fmt"
 )
 
-func add(args ...interface{}) (interface{}, string) {
+func add(env *Env, args ...interface{}) (interface{}, string) {
+	evalArgs := make([]interface{}, len(args))
+	for i, arg := range args {
+		evalArg, err := Eval(arg, env)
+		
+		if err != "" {
+			return nil, err
+		}
+		
+		evalArgs[i] = evalArg
+	}
+	
 	accumulator := 0
-	for _, val := range args {
+	for _, val := range evalArgs {
 		i, ok := val.(int)
 		if !ok {
 			return nil, "Invalid types to add. Must all be int."
@@ -16,20 +27,31 @@ func add(args ...interface{}) (interface{}, string) {
 	return accumulator, ""
 }
 
-func subtract(args ...interface{}) (interface{}, string) {
-	switch len(args) {
-	case 0:
-		return nil, "Need at least 1 int to subtract."
-	case 1:
-		val, ok := args[0].(int)
-		if !ok {
-			return nil, "Invalid types to subtract. Must all be int."
+func subtract(env *Env, args ...interface{}) (interface{}, string) {
+	evalArgs := make([]interface{}, len(args))
+	for i, arg := range args {
+		evalArg, err := Eval(arg, env)
+		
+		if err != "" {
+			return nil, err
 		}
-		return 0 - val, ""
+		
+		evalArgs[i] = evalArg
+	}
+	
+	switch len(args) {
+		case 0:
+			return nil, "Need at least 1 int to subtract."
+		case 1:
+			val, ok := evalArgs[0].(int)
+			if !ok {
+				return nil, "Invalid types to subtract. Must all be int."
+			}
+			return 0 - val, ""
 	}
 
 	accumulator := 0
-	for idx, val := range args {
+	for idx, val := range evalArgs {
 		i, ok := val.(int)
 		if !ok {
 			return nil, "Invalid types to subtract. Must all be int."
@@ -43,9 +65,19 @@ func subtract(args ...interface{}) (interface{}, string) {
 	return accumulator, ""
 }
 
-func multiply(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+func multiply(env *Env, args ...interface{}) (interface{}, string) {
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	a1, err1 := Eval(args[1], env)
+	if err1 != "" {
+		return nil, err1
+	}
+	
+	a, aok := a0.(int)
+	b, bok := a1.(int)
 
 	if !aok || !bok {
 		return nil, "Invalid types to multiply. Must be int and int."
@@ -54,9 +86,19 @@ func multiply(args ...interface{}) (interface{}, string) {
 	return a * b, ""
 }
 
-func divide(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+func divide(env *Env, args ...interface{}) (interface{}, string) {
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	a1, err1 := Eval(args[1], env)
+	if err1 != "" {
+		return nil, err1
+	}
+	
+	a, aok := a0.(int)
+	b, bok := a1.(int)
 
 	if !aok || !bok {
 		return nil, "Invalid types to divide. Must be int and int."
@@ -69,9 +111,19 @@ func divide(args ...interface{}) (interface{}, string) {
 	return a / b, ""
 }
 
-func or(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+func or(env *Env, args ...interface{}) (interface{}, string) {
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	a1, err1 := Eval(args[1], env)
+	if err1 != "" {
+		return nil, err1
+	}
+	
+	a, aok := a0.(int)
+	b, bok := a1.(int)
 
 	if !aok || !bok {
 		return nil, fmt.Sprintf("Invalid types to compare. Must be int and int. Got %d and %d", a, b)
@@ -84,9 +136,19 @@ func or(args ...interface{}) (interface{}, string) {
 	return 0, ""
 }
 
-func and(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+func and(env *Env, args ...interface{}) (interface{}, string) {
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	a1, err1 := Eval(args[1], env)
+	if err1 != "" {
+		return nil, err1
+	}
+	
+	a, aok := a0.(int)
+	b, bok := a1.(int)
 
 	if !aok || !bok {
 		return nil, "Invalid types to compare. Must be int and int."
@@ -99,8 +161,13 @@ func and(args ...interface{}) (interface{}, string) {
 	return 0, ""
 }
 
-func not(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
+func not(env *Env, args ...interface{}) (interface{}, string) {
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	a, aok := a0.(int)
 
 	if !aok {
 		return nil, "Invalid type to invert. Must be int."
@@ -113,33 +180,65 @@ func not(args ...interface{}) (interface{}, string) {
 	return 1, ""
 }
 
-func equals(args ...interface{}) (interface{}, string) {
-	if args[0] == args[1] {
+func equals(env *Env, args ...interface{}) (interface{}, string) {
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	a1, err1 := Eval(args[1], env)
+	if err1 != "" {
+		return nil, err1
+	}
+	
+	if a0 == a1 {
 		return 1, ""
 	}
 
 	return 0, ""
 }
 
-func isEmpty(args ...interface{}) (interface{}, string) {
+func isEmpty(env *Env, args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
+	
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
 
-	arg, ok := GetSexp(args[0])
+	arg, ok := GetSexp(a0)
 	if !ok {
 		return nil, "Invalid type. Can only check if a list is empty."
 	}
+	
 	if arg == nil {
+		return 1, ""
+	}
+	
+	argLen, _ := arg.Len()
+	
+	if argLen == 1 && arg.val == "you-folks" {
 		return 1, ""
 	}
 
 	return 0, ""
 }
 
-func lessThan(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+func lessThan(env *Env, args ...interface{}) (interface{}, string) {
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	a1, err1 := Eval(args[1], env)
+	if err1 != "" {
+		return nil, err1
+	}
+	
+	a, aok := a0.(int)
+	b, bok := a1.(int)
 
 	if !aok || !bok {
 		return nil, "Invalid types to compare. Must be int and int."
@@ -152,43 +251,67 @@ func lessThan(args ...interface{}) (interface{}, string) {
 	return 0, ""
 }
 
-func car(args ...interface{}) (interface{}, string) {
+func car(env *Env, args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
-	arg := args[0]
-	if arg == nil {
+	
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	if a0 == nil {
 		return nil, "Cannot take the car of an empty list."
 	}
-	lst, ok := arg.(*SexpPair)
+	
+	lst, ok := a0.(*SexpPair)
 	if !ok {
 		return nil, "Invalid type. Can only take the car of a list."
 	}
+	
 	return lst.val, ""
 }
 
-func comeFromBehind(args ...interface{}) (interface{}, string) {
+func comeFromBehind(env *Env, args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
-	arg := args[0]
-	if arg == nil {
+	
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	if a0 == nil {
 		return nil, "Cannot take the cdr of an empty list."
 	}
-	lst, ok := arg.(*SexpPair)
+	
+	lst, ok := a0.(*SexpPair)
 	if !ok {
 		return nil, "Invalid type. Can only take the cdr of a list."
 	}
+	
 	return lst.next, ""
 }
 
-func cons(args ...interface{}) (interface{}, string) {
+func cons(env *Env, args ...interface{}) (interface{}, string) {
 	if len(args) != 2 {
 		return nil, "Invalid arguments. Expecting exactly 2 arguments."
 	}
+	
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	a1, err1 := Eval(args[1], env)
+	if err1 != "" {
+		return nil, err1
+	}
 
-	head := args[0]
-	lst, ok := GetSexp(args[1])
+	head := a0
+	lst, ok := GetSexp(a1)
 	if !ok {
 		return nil, "Cannot cons to a non-list."
 	}

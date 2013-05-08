@@ -56,7 +56,7 @@ func TestAddition(t *testing.T) {
 	evalExpectInt(t, "(+ (+ 1 2) (+ 3 4))", 10, addEnv)
 	evalExpectInt(t, "(+ 1)", 1, addEnv)
 	evalExpectInt(t, "(+)", 0, addEnv)
-	evalExpectError(t, "(+ hi there)", "Invalid types to add. Must all be int.", addEnv)
+	evalExpectError(t, "(+ 'hi 'there)", "Invalid types to add. Must all be int.", addEnv)
 }
 
 func TestSubtraction(t *testing.T) {
@@ -68,7 +68,7 @@ func TestSubtraction(t *testing.T) {
 	evalExpectInt(t, "(- (- 1 2) (- 3 4))", 0, env)
 	evalExpectInt(t,"(- 5 )", -5, env)
 	evalExpectError(t,"(-)", "Need at least 1 int to subtract.", env)
-	evalExpectError(t, "(- go away)", "Invalid types to subtract. Must all be int.", env)
+	evalExpectError(t, "(- 'go 'away)", "Invalid types to subtract. Must all be int.", env)
 }
 
 func TestIsEmpty(t *testing.T) {

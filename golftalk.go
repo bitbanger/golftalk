@@ -247,7 +247,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					return Eval(alt, env)
 				}
 			case "you-folks":
-				return args, ""
+				return lst, ""
 			case "yknow":
 				sym, wasStr := Get(lst, 1).(string)
 				symExp := Get(lst, 2)
@@ -284,7 +284,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 
 				exp := Get(lst, 2)
 
-				return func(args ...interface{}) (interface{}, string) {
+				return func(env *Env, args ...interface{}) (interface{}, string) {
 					lambVars := make([]string, numSymbols)
 					for i := range lambVars {
 						// Outer scope handles possible non-string bindables
@@ -303,18 +303,12 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				if funcErr != "" {
 					return nil, funcErr
 				}
-				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
+				proc, wasFunc := evalFunc.(func(env *Env, args ...interface{}) (interface{}, string))
 				if !wasFunc {
 					return nil, "Function to execute was not a valid function."
 				}
-
-				argSlice := ToSlice(args)
-				for i := range argSlice {
-					// TODO: Do we really need to evaluate here?
-					// Lazy evaluation seems to be the way to go, but then wouldn't we have to evaluate arguments in a more limited scope?
-					argSlice[i], _ = Eval(argSlice[i], env)
-				}
-				return proc(argSlice...)
+				
+				return proc(env, ToSlice(args)...)
 		}
 	}
 
