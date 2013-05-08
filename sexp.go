@@ -23,6 +23,14 @@ func (pair *SexpPair) Len() (length int, err error) {
 	return 1, errors.New("pair does not represent a list")
 }
 
+func GetSexp(val interface{}) (*SexpPair, bool) {
+	if val == nil {
+		return nil, true
+	}
+	pair, ok := val.(*SexpPair)
+	return pair, ok
+}
+
 func toList(items... interface{}) (head *SexpPair) {
 	head = nil
 	for i := len(items) - 1; i >= 0; i-- {
