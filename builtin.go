@@ -1,7 +1,6 @@
 package main
 
 import (
-	"container/list"
 	"fmt"
 )
 
@@ -124,15 +123,14 @@ func equals(args ...interface{}) (interface{}, string) {
 
 func isEmpty(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
-		return nil, "Invalid. Expecting exactly 1 argument."
+		return nil, "Expecting exactly 1 argument."
 	}
-	lst, ok := args[0].(*list.List)
 
+	arg, ok := GetSexp(args[0])
 	if !ok {
 		return nil, "Invalid type. Can only check if a list is empty."
 	}
-
-	if lst.Len() == 0 {
+	if arg == nil {
 		return 1, ""
 	}
 
@@ -155,54 +153,47 @@ func lessThan(args ...interface{}) (interface{}, string) {
 }
 
 func car(args ...interface{}) (interface{}, string) {
-	lst, ok := args[0].(*list.List)
-
+	if len(args) != 1 {
+		return nil, "Expecting exactly 1 argument."
+	}
+	arg := args[0]
+	if arg == nil {
+		return nil, "Cannot take the car of an empty list."
+	}
+	lst, ok := arg.(*SexpPair)
 	if !ok {
 		return nil, "Invalid type. Can only take the car of a list."
 	}
-
-	if lst.Len() == 0 {
-		return nil, "Cannot take the car of an empty list."
-	}
-
-	return lst.Front().Value, ""
+	return lst.val, ""
 }
 
 func comeFromBehind(args ...interface{}) (interface{}, string) {
-	lst, ok := args[0].(*list.List)
-
+	if len(args) != 1 {
+		return nil, "Expecting exactly 1 argument."
+	}
+	arg := args[0]
+	if arg == nil {
+		return nil, "Cannot take the cdr of an empty list."
+	}
+	lst, ok := arg.(*SexpPair)
 	if !ok {
 		return nil, "Invalid type. Can only take the cdr of a list."
 	}
-
-	if lst.Len() == 0 {
-		return nil, "Cannot take the cdr of an empty list."
-	}
-
-	// TODO: Implement our own S-expressions because Go lists suck
-	newList := list.New()
-	for e := lst.Front().Next(); e != nil; e = e.Next() {
-		newList.PushBack(e.Value)
-	}
-
-	return newList, ""
+	return lst.next, ""
 }
 
 func cons(args ...interface{}) (interface{}, string) {
-	lst, ok := args[1].(*list.List)
+	if len(args) != 2 {
+		return nil, "Expecting exactly 2 arguments."
+	}
 
+	head := args[0]
+	lst, ok := GetSexp(args[1])
 	if !ok {
 		return nil, "Cannot cons to a non-list."
 	}
 
-	newList := list.New()
-	newList.PushBack(args[0])
-	for e := lst.Front(); e != nil; e = e.Next() {
-		newList.PushBack(e.Value)
-	}
-
-	return newList, ""
-
+	return &SexpPair{head, lst}, ""
 }
 
 // Neat!

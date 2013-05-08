@@ -51,25 +51,23 @@ func MakeEnv(keys []string, vals []interface{}, outer *Env) *Env {
 }
 
 // Get is a simple utility function to Get the nth item from a linked list.
-func Get(lst *list.List, n int) interface{} {
-	obj := lst.Front()
+func Get(lst *SexpPair, n int) interface{} {
+	obj := lst
 
 	for i := 0; i < n; i++ {
-		obj = obj.Next()
+		obj, _ = obj.next.(*SexpPair)
 	}
 
-	return obj.Value
+	return obj.val
 }
 
 // ToSlice converts a linked list into a slice.
-func ToSlice(lst *list.List) []interface{} {
-	slice := make([]interface{}, lst.Len())
-	i := 0
-	for e := lst.Front(); e != nil; e = e.Next() {
-		slice[i] = e.Value
-		i++
+func ToSlice(lst *SexpPair) (result []interface{}) {
+	ok := true
+	for e := lst ; e != nil && ok; e, ok = GetSexp(e.next) {
+		result = append(result, e.val)
 	}
-	return slice
+	return
 }
 
 // SplitByRegex takes a string to split and a regular expression, and returns a linked list of all substrings separated by strings matching the provided regex.
@@ -134,16 +132,19 @@ func ParseSexp(tokens *list.List) interface{} {
 	token, _ := tokens.Remove(tokens.Front()).(string)
 
 	if token == "(" {
-		sexp := list.New()
+		sexpHead := &SexpPair{"DUMMY", nil}
+		sexp := sexpHead
 		for true {
 			firstTok, _ := tokens.Front().Value.(string)
 			if firstTok == ")" {
 				break
 			}
-			sexp.PushBack(ParseSexp(tokens))
+			newPair := &SexpPair{ParseSexp(tokens), sexp.next}
+			sexp.next = newPair
+			sexp = newPair
 		}
 		tokens.Remove(tokens.Front())
-		return sexp
+		return sexpHead.next
 	} else {
 		return Atomize(token)
 	}
@@ -165,11 +166,11 @@ func SexpToString(sexp interface{}) string {
 		return s
 	}
 
-	if l, ok := sexp.(*list.List); ok {
+	if l, ok := GetSexp(sexp); ok {
 		ret := "("
-		for e := l.Front(); e != nil; e = e.Next() {
-			ret = ret + SexpToString(e.Value)
-			if e.Next() != nil {
+		for ; ok && l != nil; l, ok = l.next.(*SexpPair) {
+			ret = ret + SexpToString(l.val)
+			if _, nextOk := l.next.(*SexpPair); nextOk {
 				ret = ret + " "
 			}
 		}
@@ -208,16 +209,20 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 		}
 	}
 
+	// Is the sexp the empty list?
+	if lst, ok := GetSexp(sexp); ok && lst == nil {
+		return sexp, ""
+	}
+
 	// Is the sexp just a list?
 	// If so, let's apply the first symbol as a function to the rest of it!
-	if lst, ok := sexp.(*list.List); ok {
-		// ...Unless it's the empty list
-		if lst.Len() == 0 {
-			return lst, ""
-		}
-		
+	if lst, ok := sexp.(*SexpPair); ok {
 		// The "car" of the list will be a symbol representing a function
-		car, _ := lst.Front().Value.(string)
+		car, _ := lst.val.(string)
+		args, argsOk := GetSexp(lst.next)
+		if !argsOk {
+			return nil, "Function has invalid argument list."
+		}
 
 		switch car {
 			case "insofaras":
@@ -242,19 +247,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					return Eval(alt, env)
 				}
 			case "you-folks":
-				literal := list.New()
-
-				for e := lst.Front().Next(); e != nil; e = e.Next() {
-					val, valErr := Eval(e.Value, env)
-					
-					if valErr != "" {
-						return nil, valErr
-					}
-					
-					literal.PushBack(val)
-				}
-
-				return literal, ""
+				return args, ""
 			case "yknow":
 				sym, wasStr := Get(lst, 1).(string)
 				symExp := Get(lst, 2)
@@ -270,7 +263,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				evalFunc, _ := Eval(Get(lst, 1), env)
 				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 				evalList, _ := Eval(Get(lst, 2), env)
-				args, wasList := evalList.(*list.List)
+				args, wasList := GetSexp(evalList)
 				
 				if !wasFunc {
 					return nil, "Function given to apply doesn't evaluate as a function."
@@ -283,18 +276,19 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				argArr := ToSlice(args)
 				return proc(argArr...)
 			case "bring-me-back-something-good":
-				vars, wasList := Get(lst, 1).(*list.List)
-				exp := Get(lst, 2)
-				
-				if !wasList {
+				symbols, symbolsOk := GetSexp(args.val)
+				numSymbols, err := symbols.Len()
+				if !symbolsOk || err != nil {
 					return nil, "Symbol list to bind within lambda wasn't a list."
 				}
 
+				exp := Get(lst, 2)
+
 				return func(args ...interface{}) (interface{}, string) {
-					lambVars := make([]string, vars.Len())
+					lambVars := make([]string, numSymbols)
 					for i := range lambVars {
 						// Outer scope handles possible non-string bindables
-						lambVar, _ := Get(vars, i).(string)
+						lambVar, _ := Get(symbols, i).(string)
 						lambVars[i] = lambVar
 					}
 
@@ -305,26 +299,22 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 			case "exit":
 				os.Exit(0)
 			default:
-				evalFunc, funcErr := Eval(Get(lst, 0), env)
-				
+				evalFunc, funcErr := Eval(car, env)
 				if funcErr != "" {
 					return nil, funcErr
 				}
-				
-				args := make([]interface{}, lst.Len() - 1)
-				for i := range args {
-					// TODO: Do we really need to evaluate here?
-					// Lazy evaluation seems to be the way to go, but then wouldn't we have to evaluate arguments in a more limited scope?
-					args[i], _ = Eval(Get(lst, i + 1), env)
-				}
-				
 				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
-				if wasFunc {
-					return proc(args...)
-				} else {
+				if !wasFunc {
 					return nil, "Function to execute was not a valid function."
 				}
 
+				argSlice := ToSlice(args)
+				for i := range argSlice {
+					// TODO: Do we really need to evaluate here?
+					// Lazy evaluation seems to be the way to go, but then wouldn't we have to evaluate arguments in a more limited scope?
+					argSlice[i], _ = Eval(argSlice[i], env)
+				}
+				return proc(argSlice...)
 		}
 	}
 
