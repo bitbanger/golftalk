@@ -7,13 +7,11 @@ type SexpPair struct {
 	next interface{}
 }
 
+var EmptyList *SexpPair = nil
+
 func (pair *SexpPair) Len() (length int, err error) {
-	if pair == nil {
+	if pair == EmptyList {
 		return
-	}
-	if pair.next == nil {
-		//don't care what type next is if it's nil
-		return 1, nil
 	}
 	if next, ok := pair.next.(*SexpPair); ok {
 		length, err = next.Len()
@@ -23,16 +21,8 @@ func (pair *SexpPair) Len() (length int, err error) {
 	return 1, errors.New("pair does not represent a list")
 }
 
-func GetSexp(val interface{}) (*SexpPair, bool) {
-	if val == nil {
-		return nil, true
-	}
-	pair, ok := val.(*SexpPair)
-	return pair, ok
-}
-
 func toList(items... interface{}) (head *SexpPair) {
-	head = nil
+	head = EmptyList
 	for i := len(items) - 1; i >= 0; i-- {
 		head = &SexpPair{items[i], head}
 	}

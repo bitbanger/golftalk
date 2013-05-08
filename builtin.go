@@ -208,7 +208,7 @@ func isEmpty(env *Env, args ...interface{}) (interface{}, string) {
 		return nil, err0
 	}
 
-	arg, ok := GetSexp(a0)
+	arg, ok := a0.(*SexpPair)
 	if !ok {
 		return nil, "Invalid type. Can only check if a list is empty."
 	}
@@ -311,7 +311,7 @@ func cons(env *Env, args ...interface{}) (interface{}, string) {
 	}
 
 	head := a0
-	lst, ok := GetSexp(a1)
+	lst, ok := a1.(*SexpPair)
 	if !ok {
 		return nil, "Cannot cons to a non-list."
 	}

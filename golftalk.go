@@ -64,7 +64,7 @@ func Get(lst *SexpPair, n int) interface{} {
 // ToSlice converts a linked list into a slice.
 func ToSlice(lst *SexpPair) (result []interface{}) {
 	ok := true
-	for e := lst ; e != nil && ok; e, ok = GetSexp(e.next) {
+	for e := lst ; e != EmptyList && ok; e, ok = e.next.(*SexpPair) {
 		result = append(result, e.val)
 	}
 	return
@@ -132,14 +132,14 @@ func ParseSexp(tokens *list.List) interface{} {
 	token, _ := tokens.Remove(tokens.Front()).(string)
 
 	if token == "(" {
-		sexpHead := &SexpPair{"DUMMY", nil}
+		sexpHead := &SexpPair{"DUMMY", EmptyList}
 		sexp := sexpHead
 		for true {
 			firstTok, _ := tokens.Front().Value.(string)
 			if firstTok == ")" {
 				break
 			}
-			newPair := &SexpPair{ParseSexp(tokens), sexp.next}
+			newPair := &SexpPair{ParseSexp(tokens), EmptyList}
 			sexp.next = newPair
 			sexp = newPair
 		}
@@ -166,11 +166,11 @@ func SexpToString(sexp interface{}) string {
 		return s
 	}
 
-	if l, ok := GetSexp(sexp); ok {
+	if l, ok := sexp.(*SexpPair); ok {
 		ret := "("
-		for ; ok && l != nil; l, ok = l.next.(*SexpPair) {
+		for ; ok && l != EmptyList; l, ok = l.next.(*SexpPair) {
 			ret = ret + SexpToString(l.val)
-			if _, nextOk := l.next.(*SexpPair); nextOk {
+			if next, nextOk := l.next.(*SexpPair); nextOk && next != EmptyList {
 				ret = ret + " "
 			}
 		}
@@ -210,8 +210,8 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 	}
 
 	// Is the sexp the empty list?
-	if lst, ok := GetSexp(sexp); ok && lst == nil {
-		return sexp, ""
+	if lst, ok := sexp.(*SexpPair); ok && lst == EmptyList {
+		return lst, ""
 	}
 
 	// Is the sexp just a list?
@@ -219,7 +219,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 	if lst, ok := sexp.(*SexpPair); ok {
 		// The "car" of the list will be a symbol representing a function
 		car, _ := lst.val.(string)
-		args, argsOk := GetSexp(lst.next)
+		args, argsOk := lst.next.(*SexpPair)
 		if !argsOk {
 			return nil, "Function has invalid argument list."
 		}
@@ -263,7 +263,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				evalFunc, _ := Eval(Get(lst, 1), env)
 				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 				evalList, _ := Eval(Get(lst, 2), env)
-				args, wasList := GetSexp(evalList)
+				args, wasList := evalList.(*SexpPair)
 				
 				if !wasFunc {
 					return nil, "Function given to apply doesn't evaluate as a function."
@@ -276,7 +276,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				argArr := ToSlice(args)
 				return proc(argArr...)
 			case "bring-me-back-something-good":
-				symbols, symbolsOk := GetSexp(args.val)
+				symbols, symbolsOk := args.val.(*SexpPair)
 				numSymbols, err := symbols.Len()
 				if !symbolsOk || err != nil {
 					return nil, "Symbol list to bind within lambda wasn't a list."
