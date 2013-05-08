@@ -123,6 +123,9 @@ func equals(args ...interface{}) (interface{}, string) {
 }
 
 func isEmpty(args ...interface{}) (interface{}, string) {
+	if len(args) != 1 {
+		return nil, "Invalid. Expecting exactly 1 argument."
+	}
 	lst, ok := args[0].(*list.List)
 
 	if !ok {
