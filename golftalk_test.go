@@ -81,6 +81,6 @@ func TestIsEmpty(t *testing.T) {
 	evalExpectInt(t, "(empty? (come-from-behind (you-folks 1)) )", 1, env)
 
 	evalExpectError(t, "(empty? 1)", "Invalid type. Can only check if a list is empty.", env)
-	evalExpectError(t, "(empty?)", "Invalid. Expecting exactly 1 argument.", env)
-	evalExpectError(t, "(empty? (you-folks) (you-folks))", "Invalid. Expecting exactly 1 argument.", env)
+	evalExpectError(t, "(empty?)", "Invalid arguments. Expecting exactly 1 argument.", env)
+	evalExpectError(t, "(empty? (you-folks) (you-folks))", "Invalid arguments. Expecting exactly 1 argument.", env)
 }

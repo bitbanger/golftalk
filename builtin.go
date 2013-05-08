@@ -123,7 +123,7 @@ func equals(args ...interface{}) (interface{}, string) {
 
 func isEmpty(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
-		return nil, "Expecting exactly 1 argument."
+		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
 
 	arg, ok := GetSexp(args[0])
@@ -154,7 +154,7 @@ func lessThan(args ...interface{}) (interface{}, string) {
 
 func car(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
-		return nil, "Expecting exactly 1 argument."
+		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
 	arg := args[0]
 	if arg == nil {
@@ -169,7 +169,7 @@ func car(args ...interface{}) (interface{}, string) {
 
 func comeFromBehind(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
-		return nil, "Expecting exactly 1 argument."
+		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
 	arg := args[0]
 	if arg == nil {
@@ -184,7 +184,7 @@ func comeFromBehind(args ...interface{}) (interface{}, string) {
 
 func cons(args ...interface{}) (interface{}, string) {
 	if len(args) != 2 {
-		return nil, "Expecting exactly 2 arguments."
+		return nil, "Invalid arguments. Expecting exactly 2 arguments."
 	}
 
 	head := args[0]
