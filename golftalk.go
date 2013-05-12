@@ -258,7 +258,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					return Eval(alt, env)
 				}
 			case "you-folks":
-				return lst, ""
+				return args, ""
 			case "yknow":
 				sym, wasStr := Get(lst, 1).(string)
 				symExp := Get(lst, 2)
