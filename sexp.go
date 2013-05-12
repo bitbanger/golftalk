@@ -28,3 +28,23 @@ func toList(items... interface{}) (head *SexpPair) {
 	}
 	return
 }
+
+// Get is a simple utility function to Get the nth item from a linked list.
+func Get(lst *SexpPair, n int) interface{} {
+	obj := lst
+
+	for i := 0; i < n; i++ {
+		obj, _ = obj.next.(*SexpPair)
+	}
+
+	return obj.val
+}
+
+// ToSlice converts a linked list into a slice.
+func ToSlice(lst *SexpPair) (result []interface{}) {
+	ok := true
+	for e := lst ; e != EmptyList && ok; e, ok = e.next.(*SexpPair) {
+		result = append(result, e.val)
+	}
+	return
+}
