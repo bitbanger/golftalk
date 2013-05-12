@@ -259,7 +259,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}
 			case "you-folks":
 				return args, ""
-			case "quote":
+			case "this-guy":
 				if args == EmptyList {
 					return nil, "Need something to quote."
 				}
