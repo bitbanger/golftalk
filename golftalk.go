@@ -50,6 +50,11 @@ func MakeEnv(keys []string, vals []interface{}, outer *Env) *Env {
 	return env
 }
 
+type ContextExpression struct {
+	val interface{}
+	context *Env
+}
+
 // Get is a simple utility function to Get the nth item from a linked list.
 func Get(lst *SexpPair, n int) interface{} {
 	obj := lst
@@ -214,6 +219,12 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 		return lst, ""
 	}
 
+	// Is the sexp a *ContextExpression?
+	// If so, evaluate it in that context
+	if exp, ok := sexp.(*ContextExpression); ok {
+		return Eval(exp.val, exp.context)
+	}
+
 	// Is the sexp just a list?
 	// If so, let's apply the first symbol as a function to the rest of it!
 	if lst, ok := sexp.(*SexpPair); ok {
@@ -307,8 +318,16 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				if !wasFunc {
 					return nil, "Function to execute was not a valid function."
 				}
-				
-				return proc(env, ToSlice(args)...)
+
+				var argSlice []interface{}
+				for arg, ok := args, true; arg != EmptyList; arg, ok = arg.next.(*SexpPair) {
+					if !ok {
+						return nil, "Argument list was not a list."
+					}
+					argSlice = append(argSlice, &ContextExpression{arg.val, env})
+				}
+
+				return proc(env, argSlice...)
 		}
 	}
 
