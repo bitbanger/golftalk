@@ -259,6 +259,14 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}
 			case "you-folks":
 				return args, ""
+			case "quote":
+				if args == EmptyList {
+					return nil, "Need something to quote."
+				}
+				if args.next != EmptyList {
+					return nil, "Too many arguments to quote."
+				}
+				return args.val, ""
 			case "yknow":
 				sym, wasStr := Get(lst, 1).(string)
 				symExp := Get(lst, 2)
