@@ -111,6 +111,31 @@ func divide(env *Env, args ...interface{}) (interface{}, string) {
 	return a / b, ""
 }
 
+func mod(env *Env, args ...interface{}) (interface{}, string) {
+	a0, err0 := Eval(args[0], env)
+	if err0 != "" {
+		return nil, err0
+	}
+	
+	a1, err1 := Eval(args[1], env)
+	if err1 != "" {
+		return nil, err1
+	}
+	
+	a, aok := a0.(int)
+	b, bok := a1.(int)
+
+	if !aok || !bok {
+		return nil, "Invalid types to divide. Must be int and int."
+	}
+
+	if b == 0 {
+		return nil, "Division by zero is currently unsupported."
+	}
+
+	return a % b, ""
+}
+
 func or(env *Env, args ...interface{}) (interface{}, string) {
 	a0, err0 := Eval(args[0], env)
 	if err0 != "" {
@@ -331,3 +356,9 @@ const length = "(bring-me-back-something-good (lst) (insofaras (empty? lst) 0 (+
 
 const fib = "(bring-me-back-something-good (n) (insofaras (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))"
 const fact = "(bring-me-back-something-good (n) (insofaras (eq? n 0) 1 (* n (fact (- n 1)))))"
+
+// Exponentiation by squaring
+const pow = "(bring-me-back-something-good (x n) (insofaras (eq? n 0) 1 (insofaras (eq? (% n 2) 0) (pow (* x x) (/ n 2)) (* x (pow (* x x) (/ (- n 1) 2))))))"
+
+// Modular exponentiation by squaring
+const powmod = "(bring-me-back-something-good (x n m) (insofaras (eq? n 0) 1 (insofaras (eq? (% n 2) 0) (% (powmod (% (* x x) m) (/ n 2) m) m) (% (* x (powmod (% (* x x) m) (/ (- n 1) 2) m)) m))))"

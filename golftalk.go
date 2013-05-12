@@ -342,6 +342,7 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["-"] = subtract
 	globalEnv.Dict["*"] = multiply
 	globalEnv.Dict["/"] = divide
+	globalEnv.Dict["%"] = mod
 
 	globalEnv.Dict["or"] = or
 	globalEnv.Dict["and"] = and
@@ -364,6 +365,9 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["len"] = length
 	globalEnv.Dict["fib"] = fib
 	globalEnv.Dict["fact"] = fact
+	
+	globalEnv.Dict["pow"] = pow
+	globalEnv.Dict["powmod"] = powmod
 }
 
 func main() {
