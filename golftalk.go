@@ -55,26 +55,6 @@ type ContextExpression struct {
 	context *Env
 }
 
-// Get is a simple utility function to Get the nth item from a linked list.
-func Get(lst *SexpPair, n int) interface{} {
-	obj := lst
-
-	for i := 0; i < n; i++ {
-		obj, _ = obj.next.(*SexpPair)
-	}
-
-	return obj.val
-}
-
-// ToSlice converts a linked list into a slice.
-func ToSlice(lst *SexpPair) (result []interface{}) {
-	ok := true
-	for e := lst ; e != EmptyList && ok; e, ok = e.next.(*SexpPair) {
-		result = append(result, e.val)
-	}
-	return
-}
-
 // SplitByRegex takes a string to split and a regular expression, and returns a linked list of all substrings separated by strings matching the provided regex.
 func SplitByRegex(str, regex string) *list.List {
 	re := regexp.MustCompile(regex)
