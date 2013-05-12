@@ -354,6 +354,8 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["fib"] = fib
 	globalEnv.Dict["fact"] = fact
 	
+	globalEnv.Dict["map"] = mapOnto
+	
 	globalEnv.Dict["pow"] = pow
 	globalEnv.Dict["powmod"] = powmod
 }

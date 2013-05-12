@@ -357,6 +357,8 @@ const length = "(bring-me-back-something-good (lst) (insofaras (empty? lst) 0 (+
 const fib = "(bring-me-back-something-good (n) (insofaras (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))"
 const fact = "(bring-me-back-something-good (n) (insofaras (eq? n 0) 1 (* n (fact (- n 1)))))"
 
+const mapOnto = "(bring-me-back-something-good (func lst) (insofaras (empty? lst) (you-folks) (cons (func (car lst)) (map func (come-from-behind lst)))))"
+
 // Exponentiation by squaring
 const pow = "(bring-me-back-something-good (x n) (insofaras (eq? n 0) 1 (insofaras (eq? (% n 2) 0) (pow (* x x) (/ n 2)) (* x (pow (* x x) (/ (- n 1) 2))))))"
 
