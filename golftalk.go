@@ -5,7 +5,6 @@ import (
 	"strings"
 	"regexp"
 	"container/list"
-	"strconv"
 	"bufio"
 	"os"
 	"io"
@@ -74,69 +73,6 @@ func SplitByRegex(str, regex string) *list.List {
 	return result
 }
 
-// Atomize infers the data type of a raw string and returns the string converted to this type.
-// If it fails to safely convert the string, it simply returns it as a string again.
-func Atomize(str string) interface{} {
-	// First, try to Atomize it as an integer
-	if i, err := strconv.ParseInt(str, 10, 32); err == nil {
-		return int(i)
-	}
-
-	// That didn't work? Maybe it's a float
-	// if f, err := strconv.ParseFloat(str, 32); err == nil {
-	// 	return f
-	// }
-
-	// Fuck it; it's a string
-	return str
-}
-
-// IsBalanced determines if a string has balanced parentheses.
-// This should be used to clean data in the REPL stage before it's parsed.
-func IsBalanced(line string) bool {
-	val := 0
-	for _, c := range line {
-		if c == 40 {
-			val++
-		} else if c == 41 {
-			val--
-		}
-		
-		if val < 0 {
-			return false
-		}
-	}
-	
-	return val == 0
-}
-
-// ParseSexp takes a linked list of tokens, including parentheses, and uses the parentheses to "un-flatten" the list.
-// The result is a recursively nested set of lists representing the structure of the S-expression.
-// Note: the list is expected to have balanced parentheses.
-func ParseSexp(tokens *list.List) interface{} {
-	token, _ := tokens.Remove(tokens.Front()).(string)
-
-	if token == "(" {
-		sexpHead := &SexpPair{"DUMMY", EmptyList}
-		sexp := sexpHead
-		for true {
-			firstTok, _ := tokens.Front().Value.(string)
-			if firstTok == ")" {
-				break
-			}
-			newPair := &SexpPair{ParseSexp(tokens), EmptyList}
-			sexp.next = newPair
-			sexp = newPair
-		}
-		tokens.Remove(tokens.Front())
-		return sexpHead.next
-	} else {
-		return Atomize(token)
-	}
-
-	return nil
-}
-
 // SexpToString takes a parsed S-expression and returns a string representation, suitable for printing.
 func SexpToString(sexp interface{}) string {
 	if i, ok := sexp.(int); ok {
@@ -174,8 +110,11 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 	sexp := val
 	valStr, wasStr := val.(string)
 	if wasStr {
-		spacedParenStr := strings.Trim(strings.Replace(strings.Replace(valStr, "(", " ( ", -1), ")", " ) ", -1), " ")
-		sexp = ParseSexp(SplitByRegex(spacedParenStr, "\\s+"))
+		var err error
+		sexp, err = ParseLine(valStr)
+		if err != nil {
+			return nil, err.Error()
+		}
 	}
 	
 	// Is the sexp just a symbol?
@@ -379,12 +318,7 @@ func main() {
 				panic(err)
 			}
 		}
-		
-		if !IsBalanced(line) {
-			fmt.Println("No.\n\tUnbalanced parentheses.")
-			continue
-		}
-		
+
 		if line != "" && line != "\n" {
 			result, evalErr := Eval(line, globalEnv)
 			
