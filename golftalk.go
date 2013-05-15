@@ -297,6 +297,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}, ""
 			case "exit":
 				os.Exit(0)
+			// TODO: Argument number checking
 			default:
 				evalFunc, funcErr := Eval(car, env)
 				if funcErr != "" {
@@ -358,6 +359,12 @@ func InitGlobalEnv(globalEnv *Env) {
 	
 	globalEnv.Dict["pow"] = pow
 	globalEnv.Dict["powmod"] = powmod
+	
+	globalEnv.Dict["slice-left"] = sliceLeft
+	globalEnv.Dict["slice-right"] = sliceRight
+	globalEnv.Dict["split"] = split
+	globalEnv.Dict["merge"] = merge
+	globalEnv.Dict["merge-sort"] = mergeSort
 }
 
 func main() {

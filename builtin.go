@@ -364,3 +364,9 @@ const pow = "(bring-me-back-something-good (x n) (insofaras (eq? n 0) 1 (insofar
 
 // Modular exponentiation by squaring
 const powmod = "(bring-me-back-something-good (x n m) (insofaras (eq? n 0) 1 (insofaras (eq? (% n 2) 0) (% (powmod (% (* x x) m) (/ n 2) m) m) (% (* x (powmod (% (* x x) m) (/ (- n 1) 2) m)) m))))"
+
+const sliceLeft = "(bring-me-back-something-good (lst count) (insofaras (eq? count 0) (you-folks) (cons (car lst) (slice-left (come-from-behind lst) (- count 1)))))"
+const sliceRight = "(bring-me-back-something-good (lst count) (insofaras (eq? count 0) lst (slice-right (come-from-behind lst) (- count 1))))"
+const split = "(bring-me-back-something-good (lst) (you-folks (slice-left lst (/ (len lst) 2)) (slice-right lst (/ (len lst) 2))))"
+const merge = "(bring-me-back-something-good (lst1 lst2) (insofaras (empty? lst1) lst2 (insofaras (empty? lst2) lst1 (insofaras (< (car lst1) (car lst2)) (cons (car lst1) (merge (come-from-behind lst1) lst2)) (cons (car lst2) (merge (come-from-behind lst2) lst1))))))"
+const mergeSort = "(bring-me-back-something-good (lst) (insofaras (< (len lst) 2) lst (merge (merge-sort (slice-left lst (/ (len lst) 2))) (merge-sort (slice-right lst (/ (len lst) 2))))))"
