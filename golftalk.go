@@ -247,6 +247,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					return nil, "Too many arguments to quote."
 				}
 				return args.val, ""
+			// TODO: Fix this in the case of quoted lists :(
 			case "yknow":
 				sym, wasStr := Get(lst, 1).(string)
 				symExp := Get(lst, 2)
@@ -255,7 +256,13 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					return nil, "Symbol given to define wasn't a string."
 				}
 				
-				env.Dict[sym] = symExp
+				evalExp, evalErr := Eval(symExp, env)
+				
+				if evalErr != "" {
+					return nil, evalErr
+				}
+				
+				env.Dict[sym] = evalExp
 				
 				return nil, ""
 			case "apply":
@@ -313,7 +320,15 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					if !ok {
 						return nil, "Argument list was not a list."
 					}
-					argSlice = append(argSlice, &ContextExpression{arg.val, env})
+					
+					evalArg, evalErr := Eval(arg.val, env)
+					
+					// Errors propagate upward
+					if evalErr != "" {
+						return nil, evalErr
+					}
+					
+					argSlice = append(argSlice, evalArg)
 				}
 
 				return proc(env, argSlice...)
