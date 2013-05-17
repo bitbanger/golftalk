@@ -147,14 +147,12 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 	// Is the sexp just a list?
 	// If so, let's apply the first symbol as a function to the rest of it!
 	if lst, ok := sexp.(*SexpPair); ok {
-		// The "car" of the list will be a symbol representing a function
-		car, _ := lst.val.(string)
 		args, argsOk := lst.next.(*SexpPair)
 		if !argsOk {
 			return nil, "Function has invalid argument list."
 		}
 
-		switch car {
+		switch lst.val {
 			case "insofaras":
 				test := Get(lst, 1)
 				conseq := Get(lst, 2)
@@ -245,12 +243,13 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				os.Exit(0)
 			// TODO: Argument number checking
 			default:
-				evalFunc, funcErr := Eval(car, env)
+				evalFunc, funcErr := Eval(lst.val, env)
 				if funcErr != "" {
 					return nil, funcErr
 				}
 				proc, wasFunc := evalFunc.(func(env *Env, args ...interface{}) (interface{}, string))
 				if !wasFunc {
+					fmt.Println(lst.val)
 					return nil, "Function to execute was not a valid function."
 				}
 
