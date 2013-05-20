@@ -47,6 +47,29 @@ func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
 	}
 }
 
+func evalExpectAsString(t *testing.T, expr string, expect string, env *Env) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(expr, "gives panic:", r)
+		}
+	}()
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(expr, "gives panic:", r)
+		}
+	}()
+	x, err := Eval(expr, env)
+	if err != "" {
+		t.Error(expr, "gives error:", err)
+		return
+	}
+	str := SexpToString(x)
+	if str != expect {
+		t.Errorf("%s gives %s, want %s\n", expr, str, expect)
+		return
+	}
+}
+
 func TestAddition(t *testing.T) {
 	addEnv := NewEnv()
 	InitGlobalEnv(addEnv)
