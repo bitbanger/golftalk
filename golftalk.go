@@ -144,9 +144,9 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 		return Eval(exp.val, exp.context)
 	}
 
-	// Is the sexp just a list?
+	// Is the sexp an executable list?
 	// If so, let's apply the first symbol as a function to the rest of it!
-	if lst, ok := sexp.(*SexpPair); ok {
+	if lst, ok := sexp.(*SexpPair); ok && !lst.literal {
 		args, argsOk := lst.next.(*SexpPair)
 		if !argsOk {
 			return nil, "Function has invalid argument list."
@@ -174,8 +174,6 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				} else {
 					return Eval(alt, env)
 				}
-			case "you-folks":
-				return args, ""
 			case "this-guy":
 				if args == EmptyList {
 					return nil, "Need something to quote."
@@ -183,8 +181,13 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				if args.next != EmptyList {
 					return nil, "Too many arguments to quote."
 				}
+				
+				if argLst, ok := args.val.(*SexpPair); ok {
+					SetIsLiteral(argLst, true)
+					return argLst, ""
+				}
+				
 				return args.val, ""
-			// TODO: Fix this in the case of quoted lists :(
 			case "yknow":
 				sym, wasStr := Get(lst, 1).(string)
 				symExp := Get(lst, 2)
@@ -296,6 +299,7 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["car"] = car
 	globalEnv.Dict["come-from-behind"] = comeFromBehind
 	globalEnv.Dict["cons"] = cons
+	globalEnv.Dict["you-folks"] = youFolks
 
 	globalEnv.Dict["<"] = lessThan
 	globalEnv.Dict[">"] = greaterThan
@@ -349,6 +353,9 @@ func main() {
 			}
 			
 			if result != nil {
+				if sexpResult, ok := result.(*SexpPair); ok && (sexpResult == EmptyList || sexpResult.literal) {
+					fmt.Print("'")
+				}
 				fmt.Println(SexpToString(result))
 			}
 		}

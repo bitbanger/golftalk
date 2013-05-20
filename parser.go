@@ -92,7 +92,7 @@ func (e ParseError) Error() string {
 }
 
 func parseList(scanner *Scanner) (list *SexpPair, err error) {
-	dummy := &SexpPair{"dummy", EmptyList}
+	dummy := &SexpPair{"dummy", EmptyList, false}
 	tail := dummy
 	for token, pos, err := scanner.Scan(); token != ")"; token, pos, err = scanner.Scan() {
 		if err != nil {
@@ -105,9 +105,9 @@ func parseList(scanner *Scanner) (list *SexpPair, err error) {
 			if err != nil {
 				return EmptyList, err
 			}
-			nextPair = &SexpPair{nestedList, EmptyList}
+			nextPair = &SexpPair{nestedList, EmptyList, false}
 		} else {
-			nextPair = &SexpPair{Atomize(token), EmptyList}
+			nextPair = &SexpPair{Atomize(token), EmptyList, false}
 		}
 		tail.next = nextPair
 		tail = nextPair

@@ -30,6 +30,29 @@ func evalExpectInt(t *testing.T, expr string, expect int, env *Env) {
 	}
 }
 
+func evalExpectAsString(t *testing.T, expr string, expect string, env *Env) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(expr, "gives panic:", r)
+		}
+	}()
+	x, err := Eval(expr, env)
+	if err != "" {
+		t.Error(expr, "gives error:", err)
+		return
+	}
+	if x == nil && expect != "" {
+		t.Error(expr, "gives nil want a non-empty string")
+		return
+	}
+	
+	result := SexpToString(x)
+	if result != expect {
+		t.Errorf("%s gives %d, want %d\n", expr, result, expect)
+		return
+	}
+}
+
 func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -69,6 +92,32 @@ func TestSubtraction(t *testing.T) {
 	evalExpectInt(t,"(- 5 )", -5, env)
 	evalExpectError(t,"(-)", "Need at least 1 int to subtract.", env)
 	evalExpectError(t, "(- 'go 'away)", "Invalid types to subtract. Must all be int.", env)
+}
+
+func TestLiterals(t *testing.T) {
+	env := NewEnv()
+	InitGlobalEnv(env)
+	
+	// Literal expectations don't have quotes because these are added on the REPL level, not the SexpToString level
+	evalExpectAsString(t, "(you-folks 1 2 3)", "(1 2 3)", env)
+	evalExpectError(t, "(you-folks 1 (/ 2 0) 3)", "Division by zero is currently unsupported.", env)
+	
+	evalExpectAsString(t, "(this-guy (1 2 3))", "(1 2 3)", env)
+	evalExpectAsString(t, "(this-guy (1 (/ 2 0) 3))", "(1 (/ 2 0) 3)", env)
+}
+
+func TestCoolBuiltins(t *testing.T) {
+	env := NewEnv()
+	InitGlobalEnv(env)
+	
+	evalExpectAsString(t, "(merge-sort (you-folks))", "()", env)
+	evalExpectAsString(t, "(merge-sort (you-folks 5 4 2 3 1))", "(1 2 3 4 5)", env)
+	
+	evalExpectInt(t, "(pow 13 7)", 62748517, env)
+	evalExpectInt(t, "(powmod 13 7 99)", 62748517 % 99, env)
+	evalExpectInt(t, "(powmod 309 412 134)", 127, env)
+	
+	evalExpectAsString(t, "(map (bring-me-back-something-good (x) (pow x 2)) (you-folks 1 2 3 4 5))", "(1 4 9 16 25)", env)
 }
 
 func TestIsEmpty(t *testing.T) {

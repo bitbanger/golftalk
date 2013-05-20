@@ -219,7 +219,19 @@ func cons(env *Env, args ...interface{}) (interface{}, string) {
 		return nil, "Cannot cons to a non-list."
 	}
 
-	return &SexpPair{head, lst}, ""
+	retVal := &SexpPair{head, lst, true}
+	SetIsLiteral(retVal, true)
+	return retVal, ""
+}
+
+func youFolks(env *Env, args ...interface{}) (interface{}, string) {
+	var head *SexpPair = EmptyList
+	
+	for i := len(args) - 1; i >= 0; i-- {
+		head = &SexpPair{args[i], head, true}
+	}
+	
+	return head, ""
 }
 
 // Neat!
