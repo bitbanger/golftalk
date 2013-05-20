@@ -202,7 +202,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				env.Dict[sym] = evalExp
 				
 				return nil, ""
-			case "apply":
+			case "crunch-crunch-crunch":
 				evalFunc, _ := Eval(Get(lst, 1), env)
 				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 				evalList, _ := Eval(Get(lst, 2), env)
