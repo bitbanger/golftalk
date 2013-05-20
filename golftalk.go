@@ -49,11 +49,6 @@ func MakeEnv(keys []string, vals []interface{}, outer *Env) *Env {
 	return env
 }
 
-type ContextExpression struct {
-	val interface{}
-	context *Env
-}
-
 // SplitByRegex takes a string to split and a regular expression, and returns a linked list of all substrings separated by strings matching the provided regex.
 func SplitByRegex(str, regex string) *list.List {
 	re := regexp.MustCompile(regex)
@@ -136,12 +131,6 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 	// Is the sexp the empty list?
 	if lst, ok := sexp.(*SexpPair); ok && lst == EmptyList {
 		return lst, ""
-	}
-
-	// Is the sexp a *ContextExpression?
-	// If so, evaluate it in that context
-	if exp, ok := sexp.(*ContextExpression); ok {
-		return Eval(exp.val, exp.context)
 	}
 
 	// Is the sexp an executable list?
