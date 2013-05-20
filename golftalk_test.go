@@ -48,7 +48,7 @@ func evalExpectAsString(t *testing.T, expr string, expect string, env *Env) {
 	
 	result := SexpToString(x)
 	if result != expect {
-		t.Errorf("%s gives %d, want %d\n", expr, result, expect)
+		t.Errorf("%s gives %s, want %s\n", expr, result, expect)
 		return
 	}
 }
