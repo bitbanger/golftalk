@@ -119,6 +119,9 @@ func TestCoolBuiltins(t *testing.T) {
 	
 	evalExpectAsString(t, "(map (bring-me-back-something-good (x) (pow x 2)) (you-folks 1 2 3 4 5))", "(1 4 9 16 25)", env)
 	
+	evalExpectInt(t, "(fib 10)", 55, env)
+	evalExpectInt(t, "(in-fact 10)", 3628800, env)
+	
 	evalExpectInt(t, "(len (you-folks 1 2 3))", 3, env)
 	evalExpectInt(t, "(len (you-folks))", 0, env)
 	
