@@ -118,6 +118,12 @@ func TestCoolBuiltins(t *testing.T) {
 	evalExpectInt(t, "(powmod 309 412 134)", 127, env)
 	
 	evalExpectAsString(t, "(map (bring-me-back-something-good (x) (pow x 2)) (you-folks 1 2 3 4 5))", "(1 4 9 16 25)", env)
+	
+	evalExpectInt(t, "(len (you-folks 1 2 3))", 3, env)
+	evalExpectInt(t, "(len (you-folks))", 0, env)
+	
+	evalExpectInt(t, "(min (you-folks 18 93 534 23 8))", 8, env)
+	evalExpectInt(t, "(max (you-folks 18 93 534 23 8))", 534, env)
 }
 
 func TestIsEmpty(t *testing.T) {

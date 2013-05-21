@@ -196,7 +196,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				return nil, ""
 			case "crunch-crunch-crunch":
 				evalFunc, _ := Eval(Get(lst, 1), env)
-				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
+				proc, wasFunc := evalFunc.(func(env *Env, args ...interface{}) (interface{}, string))
 				evalList, _ := Eval(Get(lst, 2), env)
 				args, wasList := evalList.(*SexpPair)
 				
@@ -209,7 +209,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}
 				
 				argArr := ToSlice(args)
-				return proc(argArr...)
+				return proc(env, argArr...)
 			case "bring-me-back-something-good":
 				symbols, symbolsOk := args.val.(*SexpPair)
 				numSymbols, err := symbols.Len()
@@ -299,7 +299,7 @@ func InitGlobalEnv(globalEnv *Env) {
 
 	globalEnv.Dict["len"] = length
 	globalEnv.Dict["fib"] = fib
-	globalEnv.Dict["fact"] = fact
+	globalEnv.Dict["in-fact"] = inFact
 	
 	globalEnv.Dict["map"] = mapOnto
 	
@@ -311,6 +311,9 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["split"] = split
 	globalEnv.Dict["merge"] = merge
 	globalEnv.Dict["merge-sort"] = mergeSort
+	
+	globalEnv.Dict["min"] = min
+	globalEnv.Dict["max"] = max
 }
 
 func main() {

@@ -235,28 +235,104 @@ func youFolks(env *Env, args ...interface{}) (interface{}, string) {
 }
 
 // Neat!
-const greaterThan = "(bring-me-back-something-good (a b) (< b a))"
-const lessThanOrEqual = "(bring-me-back-something-good (a b) (or (< a b) (eq? a b)))"
-const greaterThanOrEqual = "(bring-me-back-something-good (a b) (or (> a b) (eq? a b)))"
+const greaterThan = "(bring-me-back-something-good (a b)" +
+						"(< b a))"
+
+const lessThanOrEqual = "(bring-me-back-something-good (a b)" +
+							"(or (< a b) (eq? a b)))"
+
+const greaterThanOrEqual = "(bring-me-back-something-good (a b)" +
+								"(or (> a b) (eq? a b)))"
 
 // Dat spaceship operator
-const spaceship = "(bring-me-back-something-good (a b) (insofaras (< a b) -1 (insofaras (> a b) 1 0"
+const spaceship = "(bring-me-back-something-good (a b)" +
+					"(insofaras (< a b)" +
+						"-1" +
+						"(insofaras (> a b)" +
+							"1" +
+							"0"
 
-const length = "(bring-me-back-something-good (lst) (insofaras (empty? lst) 0 (+ 1 (len (come-from-behind lst)))))"
+const length = "(bring-me-back-something-good (lst)" +
+					"(insofaras (empty? lst)" +
+						"0" +
+						"(+ 1 (len (come-from-behind lst)))))"
 
-const fib = "(bring-me-back-something-good (n) (insofaras (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))"
-const fact = "(bring-me-back-something-good (n) (insofaras (eq? n 0) 1 (* n (fact (- n 1)))))"
+const fib = "(bring-me-back-something-good (n)" +
+				"(insofaras (< n 2)" +
+					"n" +
+					"(+ (fib (- n 1)) (fib (- n 2)))))"
 
-const mapOnto = "(bring-me-back-something-good (func lst) (insofaras (empty? lst) (you-folks) (cons (func (car lst)) (map func (come-from-behind lst)))))"
+const inFact = "(bring-me-back-something-good (n)" +
+				"(insofaras (eq? n 0)" +
+					"1" +
+					"(* n (in-fact (- n 1)))))"
+
+const mapOnto = "(bring-me-back-something-good (func lst)" +
+					"(insofaras (empty? lst)" +
+						"(you-folks)" +
+						"(cons" +
+							"(func (car lst))" + 
+							"(map func (come-from-behind lst)))))"
 
 // Exponentiation by squaring
-const pow = "(bring-me-back-something-good (x n) (insofaras (eq? n 0) 1 (insofaras (eq? (% n 2) 0) (pow (* x x) (/ n 2)) (* x (pow (* x x) (/ (- n 1) 2))))))"
+const pow = "(bring-me-back-something-good (x n)" +
+				"(insofaras (eq? n 0)" +
+					"1" +
+					"(insofaras (eq? (% n 2) 0)" +
+						"(pow (* x x) (/ n 2))" +
+						"(* x (pow (* x x) (/ (- n 1) 2))))))"
 
 // Modular exponentiation by squaring
-const powmod = "(bring-me-back-something-good (x n m) (insofaras (eq? n 0) 1 (insofaras (eq? (% n 2) 0) (% (powmod (% (* x x) m) (/ n 2) m) m) (% (* x (powmod (% (* x x) m) (/ (- n 1) 2) m)) m))))"
+const powmod = "(bring-me-back-something-good (x n m)" +
+					"(insofaras (eq? n 0)" +
+						"1" +
+						"(insofaras (eq? (% n 2) 0)" +
+							"(% (powmod (% (* x x) m) (/ n 2) m) m)" +
+							"(% (* x (powmod (% (* x x) m) (/ (- n 1) 2) m)) m))))"
 
-const sliceLeft = "(bring-me-back-something-good (lst count) (insofaras (eq? count 0) (you-folks) (cons (car lst) (slice-left (come-from-behind lst) (- count 1)))))"
-const sliceRight = "(bring-me-back-something-good (lst count) (insofaras (eq? count 0) lst (slice-right (come-from-behind lst) (- count 1))))"
-const split = "(bring-me-back-something-good (lst) (you-folks (slice-left lst (/ (len lst) 2)) (slice-right lst (/ (len lst) 2))))"
-const merge = "(bring-me-back-something-good (lst1 lst2) (insofaras (empty? lst1) lst2 (insofaras (empty? lst2) lst1 (insofaras (< (car lst1) (car lst2)) (cons (car lst1) (merge (come-from-behind lst1) lst2)) (cons (car lst2) (merge (come-from-behind lst2) lst1))))))"
-const mergeSort = "(bring-me-back-something-good (lst) (insofaras (< (len lst) 2) lst (merge (merge-sort (slice-left lst (/ (len lst) 2))) (merge-sort (slice-right lst (/ (len lst) 2))))))"
+const sliceLeft = "(bring-me-back-something-good (lst count)" +
+						"(insofaras (eq? count 0)" +
+							"(you-folks)" +
+							"(cons" +
+								"(car lst)" +
+								"(slice-left (come-from-behind lst) (- count 1)))))"
+
+const sliceRight = "(bring-me-back-something-good (lst count)" +
+						"(insofaras (eq? count 0)" +
+							"lst" +
+							"(slice-right (come-from-behind lst) (- count 1))))"
+
+const split = "(bring-me-back-something-good (lst)" +
+					"(you-folks" +
+						"(slice-left lst (/ (len lst) 2))" +
+						"(slice-right lst (/ (len lst) 2))))"
+
+const merge = "(bring-me-back-something-good (lst1 lst2)" +
+					"(insofaras (empty? lst1)" +
+						"lst2" +
+						"(insofaras (empty? lst2)" +
+							"lst1" +
+							"(insofaras (< (car lst1) (car lst2))" +
+								"(cons (car lst1) (merge (come-from-behind lst1) lst2))" +
+								"(cons (car lst2) (merge (come-from-behind lst2) lst1))))))"
+
+const mergeSort = "(bring-me-back-something-good (lst)" +
+						"(insofaras (< (len lst) 2)" +
+							"lst" +
+							"(merge" +
+								"(merge-sort (slice-left lst (/ (len lst) 2)))" +
+								"(merge-sort (slice-right lst (/ (len lst) 2))))))"
+
+const min = "(bring-me-back-something-good (lst)" +
+				"(insofaras (eq? (len lst) 1)" +
+					"(car lst)" +
+					"(insofaras (< (car lst) (min (come-from-behind lst)))" +
+						"(car lst)" +
+						"(min (come-from-behind lst)))))"
+
+const max = "(bring-me-back-something-good (lst)" +
+				"(insofaras (eq? (len lst) 1)" +
+					"(car lst)" +
+					"(insofaras (> (car lst) (max (come-from-behind lst)))" +
+						"(car lst)" +
+						"(max (come-from-behind lst)))))"
