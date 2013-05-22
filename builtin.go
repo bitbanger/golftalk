@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func add(env *Env, args ...interface{}) (interface{}, string) {	
+func add(args ...interface{}) (interface{}, string) {	
 	accumulator := 0
 	for _, val := range args {
 		i, ok := val.(int)
@@ -16,7 +16,7 @@ func add(env *Env, args ...interface{}) (interface{}, string) {
 	return accumulator, ""
 }
 
-func subtract(env *Env, args ...interface{}) (interface{}, string) {
+func subtract(args ...interface{}) (interface{}, string) {
 	switch len(args) {
 		case 0:
 			return nil, "Need at least 1 int to subtract."
@@ -43,7 +43,7 @@ func subtract(env *Env, args ...interface{}) (interface{}, string) {
 	return accumulator, ""
 }
 
-func multiply(env *Env, args ...interface{}) (interface{}, string) {
+func multiply(args ...interface{}) (interface{}, string) {
 	a, aok := args[0].(int)
 	b, bok := args[1].(int)
 
@@ -54,7 +54,7 @@ func multiply(env *Env, args ...interface{}) (interface{}, string) {
 	return a * b, ""
 }
 
-func divide(env *Env, args ...interface{}) (interface{}, string) {
+func divide(args ...interface{}) (interface{}, string) {
 	a, aok := args[0].(int)
 	b, bok := args[1].(int)
 
@@ -69,7 +69,7 @@ func divide(env *Env, args ...interface{}) (interface{}, string) {
 	return a / b, ""
 }
 
-func mod(env *Env, args ...interface{}) (interface{}, string) {
+func mod(args ...interface{}) (interface{}, string) {
 	a, aok := args[0].(int)
 	b, bok := args[1].(int)
 
@@ -84,7 +84,7 @@ func mod(env *Env, args ...interface{}) (interface{}, string) {
 	return a % b, ""
 }
 
-func or(env *Env, args ...interface{}) (interface{}, string) {
+func or(args ...interface{}) (interface{}, string) {
 	a, aok := args[0].(int)
 	b, bok := args[1].(int)
 
@@ -99,7 +99,7 @@ func or(env *Env, args ...interface{}) (interface{}, string) {
 	return 0, ""
 }
 
-func and(env *Env, args ...interface{}) (interface{}, string) {
+func and(args ...interface{}) (interface{}, string) {
 	a, aok := args[0].(int)
 	b, bok := args[1].(int)
 
@@ -114,7 +114,7 @@ func and(env *Env, args ...interface{}) (interface{}, string) {
 	return 0, ""
 }
 
-func not(env *Env, args ...interface{}) (interface{}, string) {
+func not(args ...interface{}) (interface{}, string) {
 	a, aok := args[0].(int)
 
 	if !aok {
@@ -128,7 +128,7 @@ func not(env *Env, args ...interface{}) (interface{}, string) {
 	return 1, ""
 }
 
-func equals(env *Env, args ...interface{}) (interface{}, string) {
+func equals(args ...interface{}) (interface{}, string) {
 	if args[0] == args[1] {
 		return 1, ""
 	}
@@ -136,7 +136,7 @@ func equals(env *Env, args ...interface{}) (interface{}, string) {
 	return 0, ""
 }
 
-func isEmpty(env *Env, args ...interface{}) (interface{}, string) {
+func isEmpty(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
@@ -159,7 +159,7 @@ func isEmpty(env *Env, args ...interface{}) (interface{}, string) {
 	return 0, ""
 }
 
-func lessThan(env *Env, args ...interface{}) (interface{}, string) {
+func lessThan(args ...interface{}) (interface{}, string) {
 	a, aok := args[0].(int)
 	b, bok := args[1].(int)
 
@@ -174,7 +174,7 @@ func lessThan(env *Env, args ...interface{}) (interface{}, string) {
 	return 0, ""
 }
 
-func car(env *Env, args ...interface{}) (interface{}, string) {
+func car(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
@@ -191,7 +191,7 @@ func car(env *Env, args ...interface{}) (interface{}, string) {
 	return lst.val, ""
 }
 
-func comeFromBehind(env *Env, args ...interface{}) (interface{}, string) {
+func comeFromBehind(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
@@ -208,7 +208,7 @@ func comeFromBehind(env *Env, args ...interface{}) (interface{}, string) {
 	return lst.next, ""
 }
 
-func cons(env *Env, args ...interface{}) (interface{}, string) {
+func cons(args ...interface{}) (interface{}, string) {
 	if len(args) != 2 {
 		return nil, "Invalid arguments. Expecting exactly 2 arguments."
 	}
@@ -224,7 +224,7 @@ func cons(env *Env, args ...interface{}) (interface{}, string) {
 	return retVal, ""
 }
 
-func youFolks(env *Env, args ...interface{}) (interface{}, string) {
+func youFolks(args ...interface{}) (interface{}, string) {
 	var head *SexpPair = EmptyList
 	
 	for i := len(args) - 1; i >= 0; i-- {

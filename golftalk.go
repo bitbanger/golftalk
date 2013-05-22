@@ -219,7 +219,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				fallthrough
 			case "crunch-crunch-crunch":
 				evalFunc, _ := Eval(Get(lst, 1), env)
-				proc, wasFunc := evalFunc.(func(env *Env, args ...interface{}) (interface{}, string))
+				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 				evalList, _ := Eval(Get(lst, 2), env)
 				args, wasList := evalList.(*SexpPair)
 				
@@ -232,7 +232,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}
 				
 				argArr := ToSlice(args)
-				return proc(env, argArr...)
+				return proc(argArr...)
 			case "lambda":
 				if !USE_SCHEME_NAMES {
 					break
@@ -247,7 +247,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 
 				exp := Get(lst, 2)
 
-				return func(env *Env, args ...interface{}) (interface{}, string) {
+				return func(args ...interface{}) (interface{}, string) {
 					lambVars := make([]string, numSymbols)
 					for i := range lambVars {
 						// Outer scope handles possible non-string bindables
@@ -267,7 +267,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				if funcErr != "" {
 					return nil, funcErr
 				}
-				proc, wasFunc := evalFunc.(func(env *Env, args ...interface{}) (interface{}, string))
+				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 				if !wasFunc {
 					return nil, "Function to execute was not a valid function."
 				}
@@ -288,7 +288,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					argSlice = append(argSlice, evalArg)
 				}
 
-				return proc(env, argSlice...)
+				return proc(argSlice...)
 		}
 	}
 
