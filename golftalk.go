@@ -314,8 +314,14 @@ func InitGlobalEnv(globalEnv *Env) {
 
 	globalEnv.Dict["car"] = car
 	globalEnv.Dict["come-from-behind"] = comeFromBehind
+	if USE_SCHEME_NAMES {
+		globalEnv.Dict["cdr"] = comeFromBehind
+	}
 	globalEnv.Dict["cons"] = cons
 	globalEnv.Dict["you-folks"] = youFolks
+	if USE_SCHEME_NAMES {
+		globalEnv.Dict["list"] = youFolks
+	}
 
 	globalEnv.Dict["<"] = lessThan
 	globalEnv.Dict[">"] = greaterThan
@@ -327,6 +333,9 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["len"] = length
 	globalEnv.Dict["fib"] = fib
 	globalEnv.Dict["in-fact"] = inFact
+	if USE_SCHEME_NAMES {
+		globalEnv.Dict["fact"] = inFact
+	}
 	
 	globalEnv.Dict["map"] = mapOnto
 	
