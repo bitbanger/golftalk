@@ -311,8 +311,11 @@ func InitGlobalEnv(globalEnv *Env) {
 
 	globalEnv.Dict["eq?"] = equals
 	globalEnv.Dict["empty?"] = isEmpty
-
-	globalEnv.Dict["car"] = car
+	
+	globalEnv.Dict["one-less-car"] = car
+	if USE_SCHEME_NAMES {
+		globalEnv.Dict["car"] = car
+	}
 	globalEnv.Dict["come-from-behind"] = comeFromBehind
 	if USE_SCHEME_NAMES {
 		globalEnv.Dict["cdr"] = comeFromBehind

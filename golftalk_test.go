@@ -71,15 +71,15 @@ func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
 }
 
 func TestAddition(t *testing.T) {
-	addEnv := NewEnv()
-	InitGlobalEnv(addEnv)
+	env := NewEnv()
+	InitGlobalEnv(env)
 
-	evalExpectInt(t,"(+ -5 12)", 7, addEnv)
-	evalExpectInt(t, "(+ 7 100 99)", 206, addEnv)
-	evalExpectInt(t, "(+ (+ 1 2) (+ 3 4))", 10, addEnv)
-	evalExpectInt(t, "(+ 1)", 1, addEnv)
-	evalExpectInt(t, "(+)", 0, addEnv)
-	evalExpectError(t, "(+ 'hi 'there)", "Invalid types to add. Must all be int.", addEnv)
+	evalExpectInt(t,"(+ -5 12)", 7, env)
+	evalExpectInt(t, "(+ 7 100 99)", 206, env)
+	evalExpectInt(t, "(+ (+ 1 2) (+ 3 4))", 10, env)
+	evalExpectInt(t, "(+ 1)", 1, env)
+	evalExpectInt(t, "(+)", 0, env)
+	evalExpectError(t, "(+ 'hi 'there)", "Invalid types to add. Must all be int.", env)
 }
 
 func TestSubtraction(t *testing.T) {
@@ -104,6 +104,10 @@ func TestLiterals(t *testing.T) {
 	
 	evalExpectAsString(t, "(this-guy (1 2 3))", "(1 2 3)", env)
 	evalExpectAsString(t, "(this-guy (1 (/ 2 0) 3))", "(1 (/ 2 0) 3)", env)
+	
+	// The following two tests must be performed in uninterrupted sequence; they test evaluation idempotence
+	evalExpectAsString(t, "(yknow x '(4 5 6))", "", env)
+	evalExpectAsString(t, "x", "(4 5 6)", env)
 }
 
 func TestCoolBuiltins(t *testing.T) {
@@ -127,6 +131,15 @@ func TestCoolBuiltins(t *testing.T) {
 	
 	evalExpectInt(t, "(min (you-folks 18 93 534 23 8))", 8, env)
 	evalExpectInt(t, "(max (you-folks 18 93 534 23 8))", 534, env)
+}
+
+func TestCompositeExpressions(t *testing.T) {
+	env := NewEnv()
+	InitGlobalEnv(env)
+	
+	evalExpectInt(t, "(+ (car (merge-sort '(3457 64 24 65 243457 54))) 18)", 42, env)
+	
+	evalExpectInt(t, "(powmod 102 (one-less-car (come-from-behind (come-from-behind (come-from-behind (merge-sort (map (bring-me-back-something-good (x) (pow 2 x)) '(3 8 2 7 2 4 1))))))) 323)", 68, env)
 }
 
 func TestIsEmpty(t *testing.T) {
