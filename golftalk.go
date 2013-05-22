@@ -104,17 +104,8 @@ func SexpToString(sexp interface{}) string {
 // In the lattermost of evaluation strategies, the function may be provided as a literal or as a symbol referring to a function in the given scope chain; in other words, the first argument has Eval recursively applied to it and must yield a function.
 // If an error occurs at any point in the evaluation, Eval returns an error string, and the returned value should be disregarded.
 func Eval(val interface{}, env *Env) (interface{}, string) {
-	// Make sure the value is an S-expression
 	sexp := val
-	valStr, wasStr := val.(string)
-	if wasStr {
-		var err error
-		sexp, err = ParseLine(valStr)
-		if err != nil {
-			return nil, err.Error()
-		}
-	}
-	
+		
 	// Is the sexp just a symbol?
 	// If so, let's look it up and evaluate it!
 	if symbol, ok := sexp.(string); ok {
@@ -328,32 +319,33 @@ func InitGlobalEnv(globalEnv *Env) {
 	}
 
 	globalEnv.Dict["<"] = lessThan
-	globalEnv.Dict[">"] = greaterThan
-	globalEnv.Dict["<="] = lessThanOrEqual
-	globalEnv.Dict[">="] = greaterThanOrEqual
+	
+	globalEnv.Dict[">"], _ = ParseLine(greaterThan)
+	globalEnv.Dict["<="], _ = ParseLine(lessThanOrEqual)
+	globalEnv.Dict[">="], _ = ParseLine(greaterThanOrEqual)
 	// Dat spaceship operator
-	globalEnv.Dict["<==>"] = spaceship
+	globalEnv.Dict["<==>"], _ = ParseLine(spaceship)
 
-	globalEnv.Dict["len"] = length
-	globalEnv.Dict["fib"] = fib
-	globalEnv.Dict["in-fact"] = inFact
+	globalEnv.Dict["len"], _ = ParseLine(length)
+	globalEnv.Dict["fib"], _ = ParseLine(fib)
+	globalEnv.Dict["in-fact"], _ = ParseLine(inFact)
 	if USE_SCHEME_NAMES {
-		globalEnv.Dict["fact"] = inFact
+		globalEnv.Dict["fact"] = globalEnv.Dict["in-fact"]
 	}
 	
-	globalEnv.Dict["map"] = mapOnto
+	globalEnv.Dict["map"], _ = ParseLine(mapOnto)
 	
-	globalEnv.Dict["pow"] = pow
-	globalEnv.Dict["powmod"] = powmod
+	globalEnv.Dict["pow"], _ = ParseLine(pow)
+	globalEnv.Dict["powmod"], _ = ParseLine(powmod)
 	
-	globalEnv.Dict["slice-left"] = sliceLeft
-	globalEnv.Dict["slice-right"] = sliceRight
-	globalEnv.Dict["split"] = split
-	globalEnv.Dict["merge"] = merge
-	globalEnv.Dict["merge-sort"] = mergeSort
+	globalEnv.Dict["slice-left"], _ = ParseLine(sliceLeft)
+	globalEnv.Dict["slice-right"], _ = ParseLine(sliceRight)
+	globalEnv.Dict["split"], _ = ParseLine(split)
+	globalEnv.Dict["merge"], _ = ParseLine(merge)
+	globalEnv.Dict["merge-sort"], _ = ParseLine(mergeSort)
 	
-	globalEnv.Dict["min"] = min
-	globalEnv.Dict["max"] = max
+	globalEnv.Dict["min"], _ = ParseLine(min)
+	globalEnv.Dict["max"], _ = ParseLine(max)
 }
 
 func main() {
@@ -377,7 +369,13 @@ func main() {
 		}
 
 		if line != "" && line != "\n" {
-			result, evalErr := Eval(line, globalEnv)
+			sexp, parseErr := ParseLine(line)
+			if parseErr != nil {
+				fmt.Printf("No.\n\t%s\n", parseErr.Error())
+				continue
+			}
+			
+			result, evalErr := Eval(sexp, globalEnv)
 			
 			if evalErr != "" {
 				fmt.Printf("No.\n\t%s\n", evalErr)
