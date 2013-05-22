@@ -302,6 +302,7 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["not"] = not
 
 	globalEnv.Dict["eq?"] = equals
+	globalEnv.Dict["most-probably?"] = mostProbably
 	globalEnv.Dict["empty?"] = isEmpty
 	
 	globalEnv.Dict["one-less-car"] = car

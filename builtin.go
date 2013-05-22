@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 )
 
 func add(args ...interface{}) (interface{}, string) {	
@@ -126,6 +127,21 @@ func not(args ...interface{}) (interface{}, string) {
 	}
 
 	return 1, ""
+}
+
+func mostProbably(args ...interface{}) (interface{}, string) {
+	a, aok := args[0].(int)
+	b, bok := args[1].(int)
+
+	if !aok || !bok {
+		return nil, "Invalid types to compare. Must be int and int."
+	}
+
+	if math.Abs(float64(a) - float64(b)) < 0.5 {
+		return 1, ""
+	}
+
+	return 0, ""
 }
 
 func equals(args ...interface{}) (interface{}, string) {
