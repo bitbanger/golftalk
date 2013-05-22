@@ -260,6 +260,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					return Eval(exp, newEnv)
 				}, ""
 			case "exit":
+				fmt.Println("\nhave a nice day ;)")
 				os.Exit(0)
 			// TODO: Argument number checking
 			default:
@@ -368,7 +369,7 @@ func main() {
 		
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println()
+				fmt.Println("\n\nhave a nice day ;)")
 				break
 			} else {
 				panic(err)
