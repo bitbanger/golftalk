@@ -10,6 +10,9 @@ import (
 	"io"
 )
 
+// Should we use the actual Scheme names?
+var USE_SCHEME_NAMES bool = true
+
 // Env represents an "environment": a scope's mapping of symbol strings to values.
 // Env also provides the ability to search up a scope chain for a value.
 type Env struct {
@@ -142,6 +145,11 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 		}
 
 		switch lst.val {
+			case "if":
+				if !USE_SCHEME_NAMES {
+					break
+				}
+				fallthrough
 			case "insofaras":
 				test := Get(lst, 1)
 				conseq := Get(lst, 2)
@@ -163,6 +171,11 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				} else {
 					return Eval(alt, env)
 				}
+			case "quote":
+				if !USE_SCHEME_NAMES {
+					break
+				}
+				fallthrough
 			case "this-guy":
 				if args == EmptyList {
 					return nil, "Need something to quote."
@@ -177,6 +190,11 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}
 				
 				return args.val, ""
+			case "define":
+				if !USE_SCHEME_NAMES {
+					break
+				}
+				fallthrough
 			case "yknow":
 				sym, wasStr := Get(lst, 1).(string)
 				symExp := Get(lst, 2)
@@ -194,6 +212,11 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				env.Dict[sym] = evalExp
 				
 				return nil, ""
+			case "apply":
+				if !USE_SCHEME_NAMES {
+					break
+				}
+				fallthrough
 			case "crunch-crunch-crunch":
 				evalFunc, _ := Eval(Get(lst, 1), env)
 				proc, wasFunc := evalFunc.(func(env *Env, args ...interface{}) (interface{}, string))
@@ -210,6 +233,11 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				
 				argArr := ToSlice(args)
 				return proc(env, argArr...)
+			case "lambda":
+				if !USE_SCHEME_NAMES {
+					break
+				}
+				fallthrough
 			case "bring-me-back-something-good":
 				symbols, symbolsOk := args.val.(*SexpPair)
 				numSymbols, err := symbols.Len()
