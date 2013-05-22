@@ -110,6 +110,15 @@ func TestLiterals(t *testing.T) {
 	evalExpectAsString(t, "x", "(4 5 6)", env)
 }
 
+func TestLameBuiltins(t *testing.T) {
+	env := NewEnv()
+	InitGlobalEnv(env)
+	
+	// This tests the lazy evaluation of conditionals
+	evalExpectInt(t, "(insofaras 1 5 (/ 2 0))", 5, env)
+	evalExpectError(t, "(insofaras 0 5 (/ 2 0))", "Division by zero is currently unsupported.", env)
+}
+
 func TestCoolBuiltins(t *testing.T) {
 	env := NewEnv()
 	InitGlobalEnv(env)
