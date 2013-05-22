@@ -117,7 +117,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 	if symbol, ok := sexp.(string); ok {
 		// Unless it starts with a quote...
 		if strings.HasPrefix(symbol, "'") {
-			return symbol[1:], ""
+			return symbol, ""
 		}
 		
 		lookupEnv := env.Find(symbol)
@@ -241,7 +241,6 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}
 				proc, wasFunc := evalFunc.(func(env *Env, args ...interface{}) (interface{}, string))
 				if !wasFunc {
-					fmt.Println(lst.val)
 					return nil, "Function to execute was not a valid function."
 				}
 

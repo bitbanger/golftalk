@@ -60,6 +60,9 @@ func (s *Scanner) Scan() (token string, pos int, err error) {
 	case ')':
 		token = ")"
 		return
+	case '\'':
+		token = "'"
+		return
 	}
 
 	var tok []rune
@@ -91,8 +94,8 @@ func (e ParseError) Error() string {
 	return fmt.Sprintf("parse error: pos %d: %s", e.pos, e.reason)
 }
 
-func parseList(scanner *Scanner) (list *SexpPair, err error) {
-	dummy := &SexpPair{"dummy", EmptyList, false}
+func parseList(scanner *Scanner, literal bool) (list *SexpPair, err error) {
+	dummy := &SexpPair{"dummy", EmptyList, literal}
 	tail := dummy
 	for token, pos, err := scanner.Scan(); token != ")"; token, pos, err = scanner.Scan() {
 		if err != nil {
@@ -101,13 +104,35 @@ func parseList(scanner *Scanner) (list *SexpPair, err error) {
 
 		var nextPair *SexpPair
 		if token == "(" {
-			nestedList, err := parseList(scanner)
+			nestedList, err := parseList(scanner, literal)
 			if err != nil {
 				return EmptyList, err
 			}
-			nextPair = &SexpPair{nestedList, EmptyList, false}
+			nextPair = &SexpPair{nestedList, EmptyList, literal}
+		} else if token == "'" {
+			token2, _, err2 := scanner.Scan()
+			pos++
+			if err2 != nil {
+				if err2.Error() == "EOF" {
+					err = ParseError{pos, "Reached EOF while parsing list."}
+				} else {
+					err = err2
+				}
+				return EmptyList, err
+			} else if token2 == "(" {
+				nestedList, err := parseList(scanner, true)
+				if err != nil {
+					return EmptyList, err
+				}
+				nextPair = &SexpPair{nestedList, EmptyList, literal}
+			} else if token2 == ")" {
+				return EmptyList, ParseError{pos, "unexpected \")\" (must provide something to quote first)"}
+			} else {
+				str := "'" + token2
+				nextPair = &SexpPair{str, EmptyList, literal}
+			}
 		} else {
-			nextPair = &SexpPair{Atomize(token), EmptyList, false}
+			nextPair = &SexpPair{Atomize(token), EmptyList, literal}
 		}
 		tail.next = nextPair
 		tail = nextPair
@@ -119,14 +144,32 @@ func Parse(scanner *Scanner) (sexp interface{}, err error) {
 	token, pos, err := scanner.Scan()
 	switch token {
 	case "(":
-		return parseList(scanner)
+		return parseList(scanner, false)
 	case ")":
 		return EmptyList, ParseError{pos, "unexpected \")\""}
+	case "'":
+		token2, _, err2 := scanner.Scan()
+		pos++
+		if err2 != nil {
+			if err2.Error() == "EOF" {
+				err = ParseError{pos, "Must provide something to quote."}
+			} else {
+				err = err2
+			}
+			return
+		} else if token2 == "(" {
+			return parseList(scanner, true)
+		} else if token2 == ")" {
+			return EmptyList, ParseError{pos, "unexpected \")\""}
+		} else {
+			return "'" + token2, nil
+		}
 	}
 	if !scanner.IsDone() {
 		token, pos, err = scanner.Scan()
 		return EmptyList, ParseError{pos, fmt.Sprintf("unexpected token: \"%s\"", token)}
 	}
+	
 	return Atomize(token), nil
 }
 
