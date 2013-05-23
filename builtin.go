@@ -394,3 +394,14 @@ const sRange =
 const rRange =
 `(bring-me-back-something-good (n)
 	(range n 0))`
+
+// Linear-time reversal function which makes use of a nested recursive helper
+const reverse =
+`(bring-me-back-something-good (lst)
+	(let (
+		(reverse-helper (bring-me-back-something-good (lst work)
+			(cond
+				((empty? lst) work)
+				(1 (reverse-helper (come-from-behind lst) (cons (car lst) work)))))))
+	
+		(reverse-helper lst '())))`

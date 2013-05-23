@@ -450,6 +450,8 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["range"], _ = ParseLine(numRange)
 	globalEnv.Dict["srange"], _ = ParseLine(sRange)
 	globalEnv.Dict["rrange"], _ = ParseLine(rRange)
+	
+	globalEnv.Dict["reverse"], _ = ParseLine(reverse)
 }
 
 func main() {
