@@ -355,9 +355,10 @@ const mergeSort =
 `(bring-me-back-something-good (lst)
 	(insofaras (< (len lst) 2)
 		lst
-		(merge
-			(merge-sort (slice-left lst (/ (len lst) 2)))
-			(merge-sort (slice-right lst (/ (len lst) 2))))))`
+		(let (
+				(left-half (slice-left lst (/ (len lst) 2)))
+				(right-half (slice-right lst (/ (len lst) 2))))
+		(merge (merge-sort left-half) (merge-sort right-half)))))`
 
 const min =
 `(bring-me-back-something-good (lst)
@@ -378,8 +379,6 @@ const max =
 			(car lst))
 		(1
 			(max (come-from-behind lst)))))`
-
-
 
 const numRange =
 `(bring-me-back-something-good (a b)

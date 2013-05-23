@@ -136,6 +136,57 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 		}
 
 		switch lst.val {
+			case "let":
+				if length, _ := args.Len(); length != 2 {
+					return nil, "Let statements take two arguments: a list of bindings and an S-expression to evaluate."
+				}
+				
+				// Check that our arguments are okay
+				bindings, bindsOk := Get(lst, 1).(*SexpPair)
+				if !bindsOk {
+					return nil, "First argument to a let statement must be a list of bindings."
+				} else if bindings.literal {
+					return nil, "List of bindings cannot be literal."
+				}
+				expression := Get(lst, 2)
+				
+				// Set up parallel slices for binding
+				var symbols []string
+				var values []interface{}
+				
+				ok := true
+				bindNum := 0
+				for sexp := bindings; sexp != EmptyList && ok; sexp, ok = sexp.next.(*SexpPair) {
+					bindNum++
+					binding, bindOk := sexp.val.(*SexpPair)
+					if !bindOk {
+						return nil, fmt.Sprintf("Binding #%d is not an S-expression.", bindNum)
+					} else if bindLength, _ := binding.Len(); bindLength != 2 {
+						return nil, fmt.Sprintf("Binding #%d does not have two elements.", bindNum)
+					} else if binding.literal {
+						return nil, fmt.Sprintf("Binding #%d was literal; no binding may be literal.", bindNum)
+					}
+					
+					symbol, symOk := binding.val.(string)
+					if !symOk || symbol == "" || symbol[0] == '\'' {
+						return nil, fmt.Sprintf("Binding #%d has a non-string, empty string, or string literal symbol.", bindNum)
+					}
+					symbols = append(symbols, symbol)
+					
+					next, _ := binding.next.(*SexpPair)
+					value, evalErr := Eval(next.val, env)
+					if evalErr != "" {
+						return nil, evalErr
+					}
+					values = append(values, value)
+				}
+				
+				// Bind everything within a local environment
+				letEnv := MakeEnv(symbols, values, env)
+				
+				// Return the evaluation of the expression in the let environment
+				return Eval(expression, letEnv)
+				
 			case "cond":
 				if length, _ := args.Len(); length == 0 {
 					return nil, "Must give at least one clause to cond."
