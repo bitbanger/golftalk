@@ -294,8 +294,14 @@ const mapOnto =
 	(insofaras (empty? lst)
 		(you-folks)
 		(cons
-			(func (car lst))
+			(func (one-less-car lst))
 			(map func (come-from-behind lst)))))`
+
+const foldLeft =
+`(bring-me-back-something-good (func start lst)
+	(cond
+		((empty? lst) start)
+		(1 (foldl func (func start (one-less-car lst)) (come-from-behind lst)))))`
 
 // Exponentiation by squaring
 const pow =
@@ -324,7 +330,7 @@ const sliceLeft =
 	(insofaras (eq? count 0)
 		(you-folks)
 		(cons
-			(car lst)
+			(one-less-car lst)
 			(slice-left (come-from-behind lst) (- count 1)))))`
 
 const sliceRight =
@@ -346,10 +352,10 @@ const merge =
 			lst2)
 		((empty? lst2)
 			lst1)
-		((< (car lst1) (car lst2))
-			(cons (car lst1) (merge (come-from-behind lst1) lst2)))
+		((< (one-less-car lst1) (one-less-car lst2))
+			(cons (one-less-car lst1) (merge (come-from-behind lst1) lst2)))
 		(1
-			(cons (car lst2) (merge (come-from-behind lst2) lst1)))))`
+			(cons (one-less-car lst2) (merge (come-from-behind lst2) lst1)))))`
 
 const mergeSort =
 `(bring-me-back-something-good (lst)
@@ -364,9 +370,9 @@ const min =
 `(bring-me-back-something-good (lst)
 	(cond
 		((eq? (len lst) 1)
-			(car lst))
-		((< (car lst) (min (come-from-behind lst)))
-			(car lst))
+			(one-less-car lst))
+		((< (one-less-car lst) (min (come-from-behind lst)))
+			(one-less-car lst))
 		(1
 			(min (come-from-behind lst)))))`
 
@@ -374,9 +380,9 @@ const max =
 `(bring-me-back-something-good (lst)
 	(cond
 		((eq? (len lst) 1)
-			(car lst))
-		((> (car lst) (max (come-from-behind lst)))
-			(car lst))
+			(one-less-car lst))
+		((> (one-less-car lst) (max (come-from-behind lst)))
+			(one-less-car lst))
 		(1
 			(max (come-from-behind lst)))))`
 
@@ -395,13 +401,14 @@ const rRange =
 `(bring-me-back-something-good (n)
 	(range n 0))`
 
-// Linear-time reversal function which makes use of a nested recursive helper
+// Linear-time reversal function which makes use of a nested recursive helper\
+// (Easily done with a left fold, but I wanted to show off the fancy let-binding!)
 const reverse =
 `(bring-me-back-something-good (lst)
 	(let (
 		(reverse-helper (bring-me-back-something-good (lst work)
 			(cond
 				((empty? lst) work)
-				(1 (reverse-helper (come-from-behind lst) (cons (car lst) work)))))))
+				(1 (reverse-helper (come-from-behind lst) (cons (one-less-car lst) work)))))))
 	
 		(reverse-helper lst '())))`
