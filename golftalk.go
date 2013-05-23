@@ -154,6 +154,9 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				var symbols []string
 				var values []interface{}
 				
+				letEnv := NewEnv()
+				letEnv.Outer = env
+				
 				ok := true
 				bindNum := 0
 				for sexp := bindings; sexp != EmptyList && ok; sexp, ok = sexp.next.(*SexpPair) {
@@ -174,7 +177,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					symbols = append(symbols, symbol)
 					
 					next, _ := binding.next.(*SexpPair)
-					value, evalErr := Eval(next.val, env)
+					value, evalErr := Eval(next.val, letEnv)
 					if evalErr != "" {
 						return nil, evalErr
 					}
@@ -182,7 +185,10 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}
 				
 				// Bind everything within a local environment
-				letEnv := MakeEnv(symbols, values, env)
+				//letEnv := MakeEnv(symbols, values, env)
+				for i, _ := range symbols {
+					letEnv.Dict[symbols[i]] = values[i]
+				}
 				
 				// Return the evaluation of the expression in the let environment
 				return Eval(expression, letEnv)
