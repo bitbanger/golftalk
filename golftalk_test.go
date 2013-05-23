@@ -140,6 +140,27 @@ func TestLameBuiltins(t *testing.T) {
 	evalExpectError(t, "(insofaras 0 5 (/ 2 0))", "Division by zero is currently unsupported.", env)
 }
 
+func TestLetBinding(t *testing.T) {
+	env := NewEnv()
+	InitGlobalEnv(env)
+	
+	// Test overriding of external environment
+	evalExpectAsString(t, "(yknow x 5)", "", env)
+	evalExpectInt(t, "(let ((x 4)) x)", 4, env)
+	
+	// Test errors
+	evalExpectError(t, "(let a)", "Let statements take two arguments: a list of bindings and an S-expression to evaluate.", env)
+	evalExpectError(t, "(let a b)", "First argument to a let statement must be a list of bindings.", env)
+	evalExpectError(t, "(let '((x 2)) x)", "List of bindings cannot be literal.", env)
+	evalExpectError(t, "(let ((x 2) bad!) x)", "Binding #2 is not an S-expression.", env)
+	evalExpectError(t, "(let ((x 2) (bad!)) x)", "Binding #2 does not have two elements.", env)
+	evalExpectError(t, "(let ((x 2) '(y 3)) (+ x y))", "Binding #2 was literal; no binding may be literal.", env)
+	evalExpectError(t, "(let ((2 3)) (x))", "Binding #1 has a non-string, empty string, or string literal symbol.", env)
+	
+	// Test recursive references within let environment
+	evalExpectInt(t, "(let ((let-fib (bring-me-back-something-good (n) (insofaras (< n 2) n (+ (let-fib (- n 1)) (let-fib (- n 2))))))) (let-fib 10))", 55, env)
+}
+
 func TestCoolBuiltins(t *testing.T) {
 	env := NewEnv()
 	InitGlobalEnv(env)
@@ -162,6 +183,7 @@ func TestCoolBuiltins(t *testing.T) {
 	evalExpectInt(t, "(min (you-folks 18 93 534 23 8))", 8, env)
 	evalExpectInt(t, "(max (you-folks 18 93 534 23 8))", 534, env)
 	
+	// Dat spaceship operator
 	evalExpectInt(t, "(<==> 2 1)", 1, env)
 	evalExpectInt(t, "(<==> 2 2)", 0, env)
 	evalExpectInt(t, "(<==> 1 2)", -1, env)
