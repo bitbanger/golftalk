@@ -266,11 +266,10 @@ const greaterThanOrEqual =
 // Dat spaceship operator
 const spaceship =
 `(bring-me-back-something-good (a b)
-	(insofaras (< a b)
-		-1
-		(insofaras (> a b)
-			1
-			0`
+	(cond
+		((> a b) 1)
+		((eq? a b) 0)
+		((< a b) -1)))`
 
 const length =
 `(bring-me-back-something-good (lst)
@@ -301,19 +300,23 @@ const mapOnto =
 // Exponentiation by squaring
 const pow =
 `(bring-me-back-something-good (x n)
-	(insofaras (eq? n 0)
-		1
-		(insofaras (eq? (% n 2) 0)
-			(pow (* x x) (/ n 2))
+	(cond
+		((eq? n 0)
+			1)
+		((eq? (% n 2) 0)
+			(pow (* x x) (/ n 2)))
+		(1
 			(* x (pow (* x x) (/ (- n 1) 2))))))`
 
 // Modular exponentiation by squaring
 const powmod =
 `(bring-me-back-something-good (x n m)
-	(insofaras (eq? n 0)
-		1
-		(insofaras (eq? (% n 2) 0)
-			(% (powmod (% (* x x) m) (/ n 2) m) m)
+	(cond
+		((eq? n 0)
+			1)
+		((eq? (% n 2) 0)
+			(% (powmod (% (* x x) m) (/ n 2) m) m))
+		(1
 			(% (* x (powmod (% (* x x) m) (/ (- n 1) 2) m)) m))))`
 
 const sliceLeft =
@@ -338,13 +341,15 @@ const split =
 
 const merge =
 `(bring-me-back-something-good (lst1 lst2)
-	(insofaras (empty? lst1)
-		lst2
-		(insofaras (empty? lst2)
-			lst1
-			(insofaras (< (car lst1) (car lst2))
-				(cons (car lst1) (merge (come-from-behind lst1) lst2))
-				(cons (car lst2) (merge (come-from-behind lst2) lst1))))))`
+	(cond
+		((empty? lst1)
+			lst2)
+		((empty? lst2)
+			lst1)
+		((< (car lst1) (car lst2))
+			(cons (car lst1) (merge (come-from-behind lst1) lst2)))
+		(1
+			(cons (car lst2) (merge (come-from-behind lst2) lst1)))))`
 
 const mergeSort =
 `(bring-me-back-something-good (lst)
@@ -356,16 +361,37 @@ const mergeSort =
 
 const min =
 `(bring-me-back-something-good (lst)
-	(insofaras (eq? (len lst) 1)
-		(car lst)
-		(insofaras (< (car lst) (min (come-from-behind lst)))
-			(car lst)
+	(cond
+		((eq? (len lst) 1)
+			(car lst))
+		((< (car lst) (min (come-from-behind lst)))
+			(car lst))
+		(1
 			(min (come-from-behind lst)))))`
 
 const max =
 `(bring-me-back-something-good (lst)
-	(insofaras (eq? (len lst) 1)
-		(car lst)
-		(insofaras (> (car lst) (max (come-from-behind lst)))
-			(car lst)
+	(cond
+		((eq? (len lst) 1)
+			(car lst))
+		((> (car lst) (max (come-from-behind lst)))
+			(car lst))
+		(1
 			(max (come-from-behind lst)))))`
+
+
+
+const numRange =
+`(bring-me-back-something-good (a b)
+	(cond
+		((eq? a b) '())
+		((> a b) (cons a (range (- a 1) b)))
+		(1 (cons a (range (+ a 1) b)))))`
+
+const sRange =
+`(bring-me-back-something-good (n)
+	(range 0 n))`
+
+const rRange =
+`(bring-me-back-something-good (n)
+	(range n 0))`

@@ -136,6 +136,48 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 		}
 
 		switch lst.val {
+			case "cond":
+				if length, _ := args.Len(); length == 0 {
+					return nil, "Must give at least one clause to cond."
+				}
+				
+				ok := true
+				clauseNum := 0
+				for sexp := args; sexp != EmptyList && ok; sexp, ok = sexp.next.(*SexpPair) {
+					clauseNum++
+					
+					// Check the validity of the clause.
+					clause, clauseOk := sexp.val.(*SexpPair)
+					if !clauseOk {
+						return nil, fmt.Sprintf("Clause #%d was not a list.", clauseNum)
+					} else if length, _ := clause.Len(); length != 2 {
+						return nil, fmt.Sprintf("Clause #%d was a list with more than two elements.", clauseNum)
+					} else if clause.literal {
+						return nil, fmt.Sprintf("Clause #%d was a literal list. Clauses may not be literal lists.", clauseNum)
+					}
+					
+					// Evaluate the clause's test and check its validity.
+					eval1, err1 := Eval(clause.val, env)
+					if err1 != "" {
+						return nil, err1
+					}
+					testResult, resultOk := eval1.(int)
+					if !resultOk {
+						return nil, fmt.Sprintf("Clause #%d's test expression did not evaluate to an int.", clauseNum)
+					}
+					
+					// If the test passed, evaluate and return the result.
+					if testResult > 0 {
+						next, _ := clause.next.(*SexpPair)
+						eval2, err2 := Eval(next.val, env)
+						if err2 != "" {
+							return nil, err2
+						}
+						return eval2, ""
+					}
+				}
+				
+				return nil, "At least one test to cond must pass."
 			case "if":
 				if !USE_SCHEME_NAMES {
 					break
@@ -347,6 +389,10 @@ func InitGlobalEnv(globalEnv *Env) {
 	
 	globalEnv.Dict["min"], _ = ParseLine(min)
 	globalEnv.Dict["max"], _ = ParseLine(max)
+	
+	globalEnv.Dict["range"], _ = ParseLine(numRange)
+	globalEnv.Dict["srange"], _ = ParseLine(sRange)
+	globalEnv.Dict["rrange"], _ = ParseLine(rRange)
 }
 
 func main() {

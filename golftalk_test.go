@@ -161,6 +161,10 @@ func TestCoolBuiltins(t *testing.T) {
 	
 	evalExpectInt(t, "(min (you-folks 18 93 534 23 8))", 8, env)
 	evalExpectInt(t, "(max (you-folks 18 93 534 23 8))", 534, env)
+	
+	evalExpectInt(t, "(<==> 2 1)", 1, env)
+	evalExpectInt(t, "(<==> 2 2)", 0, env)
+	evalExpectInt(t, "(<==> 1 2)", -1, env)
 }
 
 func TestCompositeExpressions(t *testing.T) {
