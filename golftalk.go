@@ -154,14 +154,18 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				var symbols []string
 				var values []interface{}
 				
+				// Initialize the let environment first to allow lookups within itself
 				letEnv := NewEnv()
 				letEnv.Outer = env
 				
+				// Loop through all bindings and add them to the let environment
 				ok := true
 				bindNum := 0
 				for sexp := bindings; sexp != EmptyList && ok; sexp, ok = sexp.next.(*SexpPair) {
 					bindNum++
 					binding, bindOk := sexp.val.(*SexpPair)
+					
+					// Check validity of binding (must be a symbol-value pair)
 					if !bindOk {
 						return nil, fmt.Sprintf("Binding #%d is not an S-expression.", bindNum)
 					} else if bindLength, _ := binding.Len(); bindLength != 2 {
@@ -170,12 +174,16 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 						return nil, fmt.Sprintf("Binding #%d was literal; no binding may be literal.", bindNum)
 					}
 					
+					// Check validity of symbol (must be a non-literal, non-empty string)
+					// Duplicate definitions also may not exist, but we check this when we add the symbols to the environment dictionary to allow it in constant time
 					symbol, symOk := binding.val.(string)
 					if !symOk || symbol == "" || symbol[0] == '\'' {
 						return nil, fmt.Sprintf("Binding #%d has a non-string, empty string, or string literal symbol.", bindNum)
 					}
 					symbols = append(symbols, symbol)
 					
+					// Evaluate the binding value before it's bound
+					// Allow evaluation error to propagate outward, as usual
 					next, _ := binding.next.(*SexpPair)
 					value, evalErr := Eval(next.val, letEnv)
 					if evalErr != "" {
@@ -185,8 +193,11 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}
 				
 				// Bind everything within a local environment
-				//letEnv := MakeEnv(symbols, values, env)
+				// Detect duplicate symbol definitions here
 				for i, _ := range symbols {
+					if _, ok := letEnv.Dict[symbols[i]]; ok {
+						return nil, fmt.Sprintf("Binding #%d attempted to re-bind already bound symbol '%s'.", i + 1, symbols[i])
+					}
 					letEnv.Dict[symbols[i]] = values[i]
 				}
 				
@@ -434,6 +445,7 @@ func InitGlobalEnv(globalEnv *Env) {
 	}
 	
 	globalEnv.Dict["map"], _ = ParseLine(mapOnto)
+	globalEnv.Dict["foldl"], _ = ParseLine(foldLeft)
 	
 	globalEnv.Dict["pow"], _ = ParseLine(pow)
 	globalEnv.Dict["powmod"], _ = ParseLine(powmod)
