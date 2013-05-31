@@ -475,46 +475,19 @@ func InitGlobalEnv(globalEnv *Env) {
 	}
 
 	globalEnv.Dict["<"] = lessThan
-	
-	globalEnv.Dict[">"], _ = ParseLine(greaterThan)
-	globalEnv.Dict["<="], _ = ParseLine(lessThanOrEqual)
-	globalEnv.Dict[">="], _ = ParseLine(greaterThanOrEqual)
-	// Dat spaceship operator
-	globalEnv.Dict["<==>"], _ = ParseLine(spaceship)
-	globalEnv.Dict["len"], _ = ParseLine(length)
-	globalEnv.Dict["fib"], _ = ParseLine(fib)
-	globalEnv.Dict["in-fact"], _ = ParseLine(inFact)
-	if USE_SCHEME_NAMES {
-		globalEnv.Dict["fact"] = globalEnv.Dict["in-fact"]
-	}
-	
-	globalEnv.Dict["map"], _ = ParseLine(mapOnto)
-	globalEnv.Dict["foldl"], _ = ParseLine(foldLeft)
-	
-	globalEnv.Dict["pow"], _ = ParseLine(pow)
-	globalEnv.Dict["powmod"], _ = ParseLine(powmod)
-	
-	globalEnv.Dict["slice-left"], _ = ParseLine(sliceLeft)
-	globalEnv.Dict["slice-right"], _ = ParseLine(sliceRight)
-	globalEnv.Dict["split"], _ = ParseLine(split)
-	globalEnv.Dict["merge"], _ = ParseLine(merge)
-	globalEnv.Dict["merge-sort"], _ = ParseLine(mergeSort)
-	
-	globalEnv.Dict["min"], _ = ParseLine(min)
-	globalEnv.Dict["max"], _ = ParseLine(max)
-	
-	globalEnv.Dict["range"], _ = ParseLine(numRange)
-	globalEnv.Dict["srange"], _ = ParseLine(sRange)
-	globalEnv.Dict["rrange"], _ = ParseLine(rRange)
-	
-	globalEnv.Dict["reverse"], _ = ParseLine(reverse)
-	
-	globalEnv.Dict["readln"] = readLine
-	
-	globalEnv.Dict["append"], _ = ParseLine(appendList)
-	
+
 	for key, val := range globalEnv.Dict {
 		globalEnv.Dict[key], _ = Eval(val, globalEnv)
+	}
+
+	globalEnv.Dict["readln"] = readLine
+
+	libraryExprs, _ := ParseLine(libraryCode)
+	for _, expr := range libraryExprs {
+		Eval(expr, globalEnv)
+	}
+	if USE_SCHEME_NAMES {
+		globalEnv.Dict["fact"] = globalEnv.Dict["in-fact"]
 	}
 }
 
@@ -539,24 +512,26 @@ func main() {
 		}
 
 		if line != "" && line != "\n" {
-			sexp, parseErr := ParseLine(line)
+			sexps, parseErr := ParseLine(line)
 			if parseErr != nil {
 				fmt.Printf("No.\n\t%s\n", parseErr.Error())
 				continue
 			}
-			
-			result, evalErr := Eval(sexp, globalEnv)
-			
-			if evalErr != "" {
-				fmt.Printf("No.\n\t%s\n", evalErr)
-				continue
-			}
-			
-			if result != nil {
-				if sexpResult, ok := result.(*SexpPair); ok && (sexpResult == EmptyList || sexpResult.literal) {
-					fmt.Print("'")
+
+			for _, sexp := range sexps {
+				result, evalErr := Eval(sexp, globalEnv)
+
+				if evalErr != "" {
+					fmt.Printf("No.\n\t%s\n", evalErr)
+					continue
 				}
-				fmt.Println(SexpToString(result))
+
+				if result != nil {
+					if sexpResult, ok := result.(*SexpPair); ok && (sexpResult == EmptyList || sexpResult.literal) {
+						fmt.Print("'")
+					}
+					fmt.Println(SexpToString(result))
+				}
 			}
 		}
 	}
