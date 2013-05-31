@@ -425,3 +425,20 @@ const reverse =
 				(1 (reverse-helper (come-from-behind lst) (cons (one-less-car lst) work)))))))
 	
 		(reverse-helper lst '())))`
+
+const appendList =
+`(bring-me-back-something-good (lst1 lst2)
+	(let (
+		(append-elem (bring-me-back-something-good (lst elem)
+			(cond
+				((empty? lst)
+					(you-folks elem))
+				(1
+					(cons (one-less-car lst) (append-elem (come-from-behind lst) elem)))))))
+	(cond
+		((empty? lst2)
+			lst1)
+		(1
+			(append
+				(append-elem lst1 (car lst2))
+				(come-from-behind lst2))))))`

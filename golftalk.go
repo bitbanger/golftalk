@@ -335,6 +335,19 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				
 				argArr := ToSlice(args)
 				return proc(argArr...)
+			case "begin":
+				var result interface{} = nil
+				err := ""
+				numArgs, _ := args.Len()
+				
+				ourEnv := NewEnv()
+				ourEnv.Outer = env
+				
+				for i := 1; i <= numArgs; i++ {
+					result, err = Eval(Get(lst, i), ourEnv)
+				}
+				
+				return result, err
 			case "lambda":
 				if !USE_SCHEME_NAMES {
 					break
@@ -372,7 +385,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 				}
 				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 				if !wasFunc {
-					return nil, "Function to execute was not a valid function."
+					return nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", lst.val)
 				}
 
 				var argSlice []interface{}
@@ -467,6 +480,8 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["reverse"], _ = ParseLine(reverse)
 	
 	globalEnv.Dict["readln"] = readLine
+	
+	globalEnv.Dict["append"], _ = ParseLine(appendList)
 }
 
 func main() {
