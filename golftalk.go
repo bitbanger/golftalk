@@ -20,6 +20,12 @@ type Env struct {
 	Outer *Env
 }
 
+type Proc struct {
+	Vars []string
+	Exp interface{}
+	EvalEnv *Env
+}
+
 // Find returns the closest parent scope with an extant mapping between a given symbol and any value.
 func (e Env) Find(val string) *Env {
 	if e.Dict[val] != nil {
@@ -103,314 +109,339 @@ func SexpToString(sexp interface{}) string {
 // Possible ways to simplify an S-expression include returning a literal value if the input was simply that literal value, looking up a symbol in the given environment (and its implied scope chain), and interpreting the S-expression as a function invocation.
 // In the lattermost of evaluation strategies, the function may be provided as a literal or as a symbol referring to a function in the given scope chain; in other words, the first argument has Eval recursively applied to it and must yield a function.
 // If an error occurs at any point in the evaluation, Eval returns an error string, and the returned value should be disregarded.
-func Eval(val interface{}, env *Env) (interface{}, string) {
-	sexp := val
+func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
+	val := inVal
+	env := inEnv
+	
+	count := 0
+	
+	for true {
+		sexp := val
 		
-	// Is the sexp just a symbol?
-	// If so, let's look it up and evaluate it!
-	if symbol, ok := sexp.(string); ok {
-		// Unless it starts with a quote...
-		if strings.HasPrefix(symbol, "'") {
-			return symbol, ""
+		// Is the sexp just a symbol?
+		// If so, let's look it up and evaluate it!
+		if symbol, ok := sexp.(string); ok {
+			// Unless it starts with a quote...
+			if strings.HasPrefix(symbol, "'") {
+				return symbol, ""
+			}
+			
+			lookupEnv := env.Find(symbol)
+			if lookupEnv != nil {
+				// return Eval(lookupEnv.Dict[symbol], env)
+				return lookupEnv.Dict[symbol], ""
+			} else {
+				return nil, fmt.Sprintf("'%s' not found in scope chain.", symbol)
+			}
 		}
-		
-		lookupEnv := env.Find(symbol)
-		if lookupEnv != nil {
-			return Eval(lookupEnv.Dict[symbol], env)
-		} else {
-			return nil, fmt.Sprintf("'%s' not found in scope chain.", symbol)
-		}
-	}
-
-	// Is the sexp the empty list?
-	if lst, ok := sexp.(*SexpPair); ok && lst == EmptyList {
-		return lst, ""
-	}
-
-	// Is the sexp an executable list?
-	// If so, let's apply the first symbol as a function to the rest of it!
-	if lst, ok := sexp.(*SexpPair); ok && !lst.literal {
-		args, argsOk := lst.next.(*SexpPair)
-		if !argsOk {
-			return nil, "Function has invalid argument list."
+		// Is the sexp the empty list?
+		if lst, ok := sexp.(*SexpPair); ok && lst == EmptyList {
+			return lst, ""
 		}
 
-		switch lst.val {
-			case "let":
-				if length, _ := args.Len(); length != 2 {
-					return nil, "Let statements take two arguments: a list of bindings and an S-expression to evaluate."
-				}
-				
-				// Check that our arguments are okay
-				bindings, bindsOk := Get(lst, 1).(*SexpPair)
-				if !bindsOk {
-					return nil, "First argument to a let statement must be a list of bindings."
-				} else if bindings.literal {
-					return nil, "List of bindings cannot be literal."
-				}
-				expression := Get(lst, 2)
-				
-				// Set up parallel slices for binding
-				var symbols []string
-				var values []interface{}
-				
-				// Initialize the let environment first to allow lookups within itself
-				letEnv := NewEnv()
-				letEnv.Outer = env
-				
-				// Loop through all bindings and add them to the let environment
-				ok := true
-				bindNum := 0
-				for sexp := bindings; sexp != EmptyList && ok; sexp, ok = sexp.next.(*SexpPair) {
-					bindNum++
-					binding, bindOk := sexp.val.(*SexpPair)
-					
-					// Check validity of binding (must be a symbol-value pair)
-					if !bindOk {
-						return nil, fmt.Sprintf("Binding #%d is not an S-expression.", bindNum)
-					} else if bindLength, _ := binding.Len(); bindLength != 2 {
-						return nil, fmt.Sprintf("Binding #%d does not have two elements.", bindNum)
-					} else if binding.literal {
-						return nil, fmt.Sprintf("Binding #%d was literal; no binding may be literal.", bindNum)
+		// Is the sexp an executable list?
+		// If so, let's apply the first symbol as a function to the rest of it!
+		if lst, ok := sexp.(*SexpPair); ok && !lst.literal {
+			args, argsOk := lst.next.(*SexpPair)
+			if !argsOk {
+				return nil, "Function has invalid argument list."
+			}
+			switch lst.val {
+				case "let":
+					if length, _ := args.Len(); length != 2 {
+						return nil, "Let statements take two arguments: a list of bindings and an S-expression to evaluate."
 					}
 					
-					// Check validity of symbol (must be a non-literal, non-empty string)
-					// Duplicate definitions also may not exist, but we check this when we add the symbols to the environment dictionary to allow it in constant time
-					symbol, symOk := binding.val.(string)
-					if !symOk || symbol == "" || symbol[0] == '\'' {
-						return nil, fmt.Sprintf("Binding #%d has a non-string, empty string, or string literal symbol.", bindNum)
+					// Check that our arguments are okay
+					bindings, bindsOk := Get(lst, 1).(*SexpPair)
+					if !bindsOk {
+						return nil, "First argument to a let statement must be a list of bindings."
+					} else if bindings.literal {
+						return nil, "List of bindings cannot be literal."
 					}
-					symbols = append(symbols, symbol)
+					expression := Get(lst, 2)
 					
-					// Evaluate the binding value before it's bound
-					// Allow evaluation error to propagate outward, as usual
-					// NOTE: Is it possible that, during sequential evaluation, the environment could be changed and cause the same text to evaluate as two different things?
-					next, _ := binding.next.(*SexpPair)
-					value, evalErr := Eval(next.val, letEnv)
+					// Set up parallel slices for binding
+					var symbols []string
+					var values []interface{}
+					
+					// Initialize the let environment first to allow lookups within itself
+					letEnv := NewEnv()
+					letEnv.Outer = env
+					
+					// Loop through all bindings and add them to the let environment
+					ok := true
+					bindNum := 0
+					for sexp := bindings; sexp != EmptyList && ok; sexp, ok = sexp.next.(*SexpPair) {
+						bindNum++
+						binding, bindOk := sexp.val.(*SexpPair)
+						
+						// Check validity of binding (must be a symbol-value pair)
+						if !bindOk {
+							return nil, fmt.Sprintf("Binding #%d is not an S-expression.", bindNum)
+						} else if bindLength, _ := binding.Len(); bindLength != 2 {
+							return nil, fmt.Sprintf("Binding #%d does not have two elements.", bindNum)
+						} else if binding.literal {
+							return nil, fmt.Sprintf("Binding #%d was literal; no binding may be literal.", bindNum)
+						}
+						
+						// Check validity of symbol (must be a non-literal, non-empty string)
+						// Duplicate definitions also may not exist, but we check this when we add the symbols to the environment dictionary to allow it in constant time
+						symbol, symOk := binding.val.(string)
+						if !symOk || symbol == "" || symbol[0] == '\'' {
+							return nil, fmt.Sprintf("Binding #%d has a non-string, empty string, or string literal symbol.", bindNum)
+						}
+						symbols = append(symbols, symbol)
+						
+						// Evaluate the binding value before it's bound
+						// Allow evaluation error to propagate outward, as usual
+						// NOTE: Is it possible that, during sequential evaluation, the environment could be changed and cause the same text to evaluate as two different things?
+						next, _ := binding.next.(*SexpPair)
+						value, evalErr := Eval(next.val, letEnv)
+						if evalErr != "" {
+							return nil, evalErr
+						}
+						values = append(values, value)
+					}
+					
+					// Bind everything within a local environment
+					// Detect duplicate symbol definitions here
+					for i, _ := range symbols {
+						if _, ok := letEnv.Dict[symbols[i]]; ok {
+							return nil, fmt.Sprintf("Binding #%d attempted to re-bind already bound symbol '%s'.", i + 1, symbols[i])
+						}
+						letEnv.Dict[symbols[i]] = values[i]
+					}
+					// Return the evaluation of the expression in the let environment
+					return Eval(expression, letEnv)
+					
+				case "cond":
+					if length, _ := args.Len(); length == 0 {
+						return nil, "Must give at least one clause to cond."
+					}
+					
+					ok := true
+					clauseNum := 0
+					for sexp := args; sexp != EmptyList && ok; sexp, ok = sexp.next.(*SexpPair) {
+						clauseNum++
+						
+						// Check the validity of the clause.
+						clause, clauseOk := sexp.val.(*SexpPair)
+						if !clauseOk {
+							return nil, fmt.Sprintf("Clause #%d was not a list.", clauseNum)
+						} else if length, _ := clause.Len(); length != 2 {
+							return nil, fmt.Sprintf("Clause #%d was a list with more than two elements.", clauseNum)
+						} else if clause.literal {
+							return nil, fmt.Sprintf("Clause #%d was a literal list. Clauses may not be literal lists.", clauseNum)
+						}
+						
+						// Evaluate the clause's test and check its validity.
+						eval1, err1 := Eval(clause.val, env)
+						if err1 != "" {
+							return nil, err1
+						}
+						testResult, resultOk := eval1.(int)
+						if !resultOk {
+							return nil, fmt.Sprintf("Clause #%d's test expression did not evaluate to an int.", clauseNum)
+						}
+						
+						// If the test passed, evaluate and return the result.
+						if testResult > 0 {
+							next, _ := clause.next.(*SexpPair)
+							eval2, err2 := Eval(next.val, env)
+							if err2 != "" {
+								return nil, err2
+							}
+							return eval2, ""
+						}
+					}
+					
+					return nil, "At least one test to cond must pass."
+				case "if":
+					if !USE_SCHEME_NAMES {
+						break
+					}
+					fallthrough
+				case "insofaras":
+					test := Get(lst, 1)
+					conseq := Get(lst, 2)
+					alt := Get(lst, 3)
+					
+					
+					evalTest, testErr := Eval(test, env)
+					
+					if testErr != "" {
+						return nil, testErr
+					}
+					
+					result, wasInt := evalTest.(int)
+					
+					if !wasInt {
+						return nil, "Test given to conditional evaluated as a non-integer."
+					} else if result > 0 {
+						return Eval(conseq, env)
+					} else {
+						return Eval(alt, env)
+					}
+				case "quote":
+					if !USE_SCHEME_NAMES {
+						break
+					}
+					fallthrough
+				case "this-guy":
+					if args == EmptyList {
+						return nil, "Need something to quote."
+					}
+					if args.next != EmptyList {
+						return nil, "Too many arguments to quote."
+					}
+					
+					if argLst, ok := args.val.(*SexpPair); ok {
+						SetIsLiteral(argLst, true)
+						return argLst, ""
+					}
+					
+					return args.val, ""
+				case "define":
+					if !USE_SCHEME_NAMES {
+						break
+					}
+					fallthrough
+				case "yknow":
+					sym, wasStr := Get(lst, 1).(string)
+					symExp := Get(lst, 2)
+					
+					if !wasStr {
+						return nil, "Symbol given to define wasn't a string."
+					}
+					
+					evalExp, evalErr := Eval(symExp, env)
+					
 					if evalErr != "" {
 						return nil, evalErr
 					}
-					values = append(values, value)
-				}
-				
-				// Bind everything within a local environment
-				// Detect duplicate symbol definitions here
-				for i, _ := range symbols {
-					if _, ok := letEnv.Dict[symbols[i]]; ok {
-						return nil, fmt.Sprintf("Binding #%d attempted to re-bind already bound symbol '%s'.", i + 1, symbols[i])
-					}
-					letEnv.Dict[symbols[i]] = values[i]
-				}
-				
-				// Return the evaluation of the expression in the let environment
-				return Eval(expression, letEnv)
-				
-			case "cond":
-				if length, _ := args.Len(); length == 0 {
-					return nil, "Must give at least one clause to cond."
-				}
-				
-				ok := true
-				clauseNum := 0
-				for sexp := args; sexp != EmptyList && ok; sexp, ok = sexp.next.(*SexpPair) {
-					clauseNum++
 					
-					// Check the validity of the clause.
-					clause, clauseOk := sexp.val.(*SexpPair)
-					if !clauseOk {
-						return nil, fmt.Sprintf("Clause #%d was not a list.", clauseNum)
-					} else if length, _ := clause.Len(); length != 2 {
-						return nil, fmt.Sprintf("Clause #%d was a list with more than two elements.", clauseNum)
-					} else if clause.literal {
-						return nil, fmt.Sprintf("Clause #%d was a literal list. Clauses may not be literal lists.", clauseNum)
+					env.Dict[sym] = evalExp
+					
+					return nil, ""
+				case "apply":
+					if !USE_SCHEME_NAMES {
+						break
+					}
+					fallthrough
+				case "crunch-crunch-crunch":
+					evalFunc, _ := Eval(Get(lst, 1), env)
+					proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
+					evalList, _ := Eval(Get(lst, 2), env)
+					args, wasList := evalList.(*SexpPair)
+					
+					if !wasFunc {
+						return nil, "Function given to apply doesn't evaluate as a function."
 					}
 					
-					// Evaluate the clause's test and check its validity.
-					eval1, err1 := Eval(clause.val, env)
-					if err1 != "" {
-						return nil, err1
-					}
-					testResult, resultOk := eval1.(int)
-					if !resultOk {
-						return nil, fmt.Sprintf("Clause #%d's test expression did not evaluate to an int.", clauseNum)
+					if !wasList {
+						return nil, "List given to apply doesn't evaluate as a list."
 					}
 					
-					// If the test passed, evaluate and return the result.
-					if testResult > 0 {
-						next, _ := clause.next.(*SexpPair)
-						eval2, err2 := Eval(next.val, env)
-						if err2 != "" {
-							return nil, err2
-						}
-						return eval2, ""
+					argArr := ToSlice(args)
+					return proc(argArr...)
+				case "begin":
+					var result interface{} = nil
+					err := ""
+					numArgs, _ := args.Len()
+					
+					ourEnv := NewEnv()
+					ourEnv.Outer = env
+					
+					for i := 1; i <= numArgs; i++ {
+						result, err = Eval(Get(lst, i), ourEnv)
 					}
-				}
-				
-				return nil, "At least one test to cond must pass."
-			case "if":
-				if !USE_SCHEME_NAMES {
-					break
-				}
-				fallthrough
-			case "insofaras":
-				test := Get(lst, 1)
-				conseq := Get(lst, 2)
-				alt := Get(lst, 3)
-				
-				
-				evalTest, testErr := Eval(test, env)
-				
-				if testErr != "" {
-					return nil, testErr
-				}
-				
-				result, wasInt := evalTest.(int)
-				
-				if !wasInt {
-					return nil, "Test given to conditional evaluated as a non-integer."
-				} else if result > 0 {
-					return Eval(conseq, env)
-				} else {
-					return Eval(alt, env)
-				}
-			case "quote":
-				if !USE_SCHEME_NAMES {
-					break
-				}
-				fallthrough
-			case "this-guy":
-				if args == EmptyList {
-					return nil, "Need something to quote."
-				}
-				if args.next != EmptyList {
-					return nil, "Too many arguments to quote."
-				}
-				
-				if argLst, ok := args.val.(*SexpPair); ok {
-					SetIsLiteral(argLst, true)
-					return argLst, ""
-				}
-				
-				return args.val, ""
-			case "define":
-				if !USE_SCHEME_NAMES {
-					break
-				}
-				fallthrough
-			case "yknow":
-				sym, wasStr := Get(lst, 1).(string)
-				symExp := Get(lst, 2)
-				
-				if !wasStr {
-					return nil, "Symbol given to define wasn't a string."
-				}
-				
-				evalExp, evalErr := Eval(symExp, env)
-				
-				if evalErr != "" {
-					return nil, evalErr
-				}
-				
-				env.Dict[sym] = evalExp
-				
-				return nil, ""
-			case "apply":
-				if !USE_SCHEME_NAMES {
-					break
-				}
-				fallthrough
-			case "crunch-crunch-crunch":
-				evalFunc, _ := Eval(Get(lst, 1), env)
-				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
-				evalList, _ := Eval(Get(lst, 2), env)
-				args, wasList := evalList.(*SexpPair)
-				
-				if !wasFunc {
-					return nil, "Function given to apply doesn't evaluate as a function."
-				}
-				
-				if !wasList {
-					return nil, "List given to apply doesn't evaluate as a list."
-				}
-				
-				argArr := ToSlice(args)
-				return proc(argArr...)
-			case "begin":
-				var result interface{} = nil
-				err := ""
-				numArgs, _ := args.Len()
-				
-				ourEnv := NewEnv()
-				ourEnv.Outer = env
-				
-				for i := 1; i <= numArgs; i++ {
-					result, err = Eval(Get(lst, i), ourEnv)
-				}
-				
-				return result, err
-			case "lambda":
-				if !USE_SCHEME_NAMES {
-					break
-				}
-				fallthrough
-			case "bring-me-back-something-good":
-				symbols, symbolsOk := args.val.(*SexpPair)
-				numSymbols, err := symbols.Len()
-				if !symbolsOk || err != nil {
-					return nil, "Symbol list to bind within lambda wasn't a list."
-				}
+					
+					return result, err
+				case "lambda":
+					if !USE_SCHEME_NAMES {
+						break
+					}
+					fallthrough
+				case "bring-me-back-something-good":
+					symbols, symbolsOk := args.val.(*SexpPair)
+					numSymbols, err := symbols.Len()
+					if !symbolsOk || err != nil {
+						return nil, "Symbol list to bind within lambda wasn't a list."
+					}
 
-				exp := Get(lst, 2)
-
-				return func(args ...interface{}) (interface{}, string) {
+					exp := Get(lst, 2)
+					
 					lambVars := make([]string, numSymbols)
 					for i := range lambVars {
-						// Outer scope handles possible non-string bindables
 						lambVar, _ := Get(symbols, i).(string)
 						lambVars[i] = lambVar
 					}
+					
+					return Proc{lambVars, exp, env}, ""
+				case "exit":
+					fmt.Println("\nhave a nice day ;)")
+					os.Exit(0)
+				// TODO: Argument number checking
+				default:
+					evalFunc, funcErr := Eval(lst.val, env)
+					if funcErr != "" {
+						return nil, funcErr
+					}
 
-					newEnv := MakeEnv(lambVars, args, env)
-
-					return Eval(exp, newEnv)
-				}, ""
-			case "exit":
-				fmt.Println("\nhave a nice day ;)")
-				os.Exit(0)
-			// TODO: Argument number checking
-			default:
-				evalFunc, funcErr := Eval(lst.val, env)
-				if funcErr != "" {
-					return nil, funcErr
-				}
-				proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
-				if !wasFunc {
-					return nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", lst.val)
-				}
-
-				var argSlice []interface{}
-				for arg, ok := args, true; arg != EmptyList; arg, ok = arg.next.(*SexpPair) {
-					if !ok {
-						return nil, "Argument list was not a list."
+					var argSlice []interface{}
+					for arg, ok := args, true; arg != EmptyList; arg, ok = arg.next.(*SexpPair) {
+						if !ok {
+							return nil, "Argument list was not a list."
+						}
+						
+						evalArg, evalErr := Eval(arg.val, env)
+						
+						// Errors propagate upward
+						if evalErr != "" {
+							return nil, evalErr
+						}
+						
+						argSlice = append(argSlice, evalArg)
 					}
 					
-					evalArg, evalErr := Eval(arg.val, env)
+					fun, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
+					proc, wasProc := evalFunc.(Proc)
 					
-					// Errors propagate upward
-					if evalErr != "" {
-						return nil, evalErr
+					if wasProc {
+						// Bind params to args in a new environment
+						argSlice := ToSlice(args)
+						var evalErr string
+						for i, _ := range argSlice {
+							argSlice[i], evalErr = Eval(argSlice[i], env)
+							
+							if evalErr != "" {
+								return nil, evalErr
+							}
+						}
+						
+						env = MakeEnv(proc.Vars, argSlice, proc.EvalEnv)
+						
+						// Set the expression to be evaluated
+						val = proc.Exp
+						count++
+						
+						// Re-iterate without recursing!
+						continue
+					} else if wasFunc {
+						return fun(argSlice...)
+					} else {
+						return nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", lst.val)
 					}
-					
-					argSlice = append(argSlice, evalArg)
-				}
-
-				return proc(argSlice...)
+			}
 		}
-	}
 
-	// No other choices left; the sexp must be a literal.
-	// Let's just return it!
-	return sexp, ""
+		// No other choices left; the sexp must be a literal.
+		// Let's just return it!
+		return sexp, ""
+	}
+	
+	return nil, "Eval is seriously broken."
 }
 
 // InitGlobalEnv initializes the hierarchichal "root" environment with a few built-in functions.
@@ -450,7 +481,6 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict[">="], _ = ParseLine(greaterThanOrEqual)
 	// Dat spaceship operator
 	globalEnv.Dict["<==>"], _ = ParseLine(spaceship)
-
 	globalEnv.Dict["len"], _ = ParseLine(length)
 	globalEnv.Dict["fib"], _ = ParseLine(fib)
 	globalEnv.Dict["in-fact"], _ = ParseLine(inFact)
@@ -482,6 +512,10 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["readln"] = readLine
 	
 	globalEnv.Dict["append"], _ = ParseLine(appendList)
+	
+	for key, val := range globalEnv.Dict {
+		globalEnv.Dict[key], _ = Eval(val, globalEnv)
+	}
 }
 
 func main() {
