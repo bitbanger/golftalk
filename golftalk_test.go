@@ -11,13 +11,14 @@ func evalExpectInt(t *testing.T, expr string, expect int, env *Env) {
 		}
 	}()
 	
-	sexp, parseErr := ParseLine(expr)
+	sexps, parseErr := ParseLine(expr)
 	if parseErr != nil {
 		t.Error(expr, "parsing gives error:", parseErr.Error())
 		return
 	}
-	
-	x, err := Eval(sexp, env)
+
+	//TODO: fix this to do something more sensible than just eval the first one
+	x, err := Eval(sexps[0], env)
 	if err != "" {
 		t.Error(expr, "gives error:", err)
 		return
@@ -44,13 +45,14 @@ func evalExpectAsString(t *testing.T, expr string, expect string, env *Env) {
 		}
 	}()
 	
-	sexp, parseErr := ParseLine(expr)
+	sexps, parseErr := ParseLine(expr)
 	if parseErr != nil {
 		t.Error(expr, "parsing gives error:", parseErr.Error())
 		return
 	}
-	
-	x, err := Eval(sexp, env)
+
+	//TODO: fix this to do something more sensible than just eval the first one
+	x, err := Eval(sexps[0], env)
 	if err != "" {
 		t.Error(expr, "gives error:", err)
 		return
@@ -74,13 +76,14 @@ func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
 		}
 	}()
 	
-	sexp, parseErr := ParseLine(expr)
+	sexps, parseErr := ParseLine(expr)
 	if parseErr != nil {
 		t.Error(expr, "parsing gives error:", parseErr.Error())
 		return
 	}
-	
-	x, err := Eval(sexp, env)
+
+	//TODO: fix this to do something more sensible than just eval the first one
+	x, err := Eval(sexps[0], env)
 	if err == "" {
 		t.Errorf("%s gives %v, want error: %s\n", expr, x, expect)
 		return
