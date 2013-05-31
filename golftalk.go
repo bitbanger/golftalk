@@ -113,8 +113,6 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 	val := inVal
 	env := inEnv
 	
-	count := 0
-	
 	for true {
 		sexp := val
 		
@@ -424,7 +422,6 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 						
 						// Set the expression to be evaluated
 						val = proc.Exp
-						count++
 						
 						// Re-iterate without recursing!
 						continue
