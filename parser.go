@@ -147,16 +147,13 @@ func parseList(scanner *Scanner, quoted bool, topLevel bool) (list *SexpPair, er
 	return dummy.next.(*SexpPair), nil
 }
 
-func Parse(scanner *Scanner) (sexp interface{}, err error) {
-	sexp, err = parseElement(scanner, false, false, true)
-	if !scanner.IsDone() {
-		token, pos, _ := scanner.Scan()
-		return EmptyList, ParseError{pos, fmt.Sprintf("unexpected token: \"%s\"", token)}
-	}
+func Parse(scanner *Scanner) (sexps []interface{}, err error) {
+	sexp, err := parseList(scanner, false, true)
+	sexps = ToSlice(sexp)
 	return
 }
 
-func ParseLine(line string) (sexp interface{}, err error) {
+func ParseLine(line string) (sexps []interface{}, err error) {
 	scanner := NewScanner(strings.NewReader(line))
 	return Parse(scanner)
 }

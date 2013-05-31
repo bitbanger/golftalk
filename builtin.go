@@ -263,182 +263,244 @@ func youFolks(args ...interface{}) (interface{}, string) {
 	return head, ""
 }
 
-// Neat!
-const greaterThan =
-`(bring-me-back-something-good (a b)
-	(< b a))`
+//proftalk library code
+const libraryCode = `
+(yknow >
+	(bring-me-back-something-good (a b)
+		(< b a)
+	)
+)
 
-const lessThanOrEqual =
-`(bring-me-back-something-good (a b)
-	(or (< a b) (eq? a b)))`
+(yknow <=
+	(bring-me-back-something-good (a b)
+		(or (< a b) (eq? a b))
+	)
+)
 
-const greaterThanOrEqual =
-`(bring-me-back-something-good (a b)
-	(or (> a b) (eq? a b)))`
+(yknow >=
+	(bring-me-back-something-good (a b)
+		(or (> a b) (eq? a b))
+	)
+)
 
-// Dat spaceship operator
-const spaceship =
-`(bring-me-back-something-good (a b)
-	(cond
-		((> a b) 1)
-		((eq? a b) 0)
-		((< a b) -1)))`
+(yknow <==>
+	(bring-me-back-something-good (a b)
+		(cond
+			((> a b) 1)
+			((eq? a b) 0)
+			((< a b) -1)
+		)
+	)
+)
 
-const length =
-`(bring-me-back-something-good (lst)
-	(insofaras (empty? lst)
-		0
-		(+ 1 (len (come-from-behind lst)))))`
+(yknow len
+	(bring-me-back-something-good (lst)
+		(insofaras (empty? lst)
+			0
+			(+ 1 (len (come-from-behind lst)))
+		)
+	)
+)
 
-const fib =
-`(bring-me-back-something-good (n)
-				(insofaras (< n 2)
-					n
-					(+ (fib (- n 1)) (fib (- n 2)))))`
+(yknow fib
+	(bring-me-back-something-good (n)
+		(insofaras (< n 2)
+			n
+			(+ (fib (- n 1)) (fib (- n 2)))
+		)
+	)
+)
 
-const inFact =
-`(bring-me-back-something-good (n)
-	(insofaras (eq? n 0)
-		1
-		(* n (in-fact (- n 1)))))`
+(yknow in-fact
+	(bring-me-back-something-good (n)
+		(insofaras (eq? n 0)
+			1
+			(* n (in-fact (- n 1)))
+		)
+	)
+)
 
-const mapOnto =
-`(bring-me-back-something-good (func lst)
-	(insofaras (empty? lst)
-		(you-folks)
-		(cons
-			(func (one-less-car lst))
-			(map func (come-from-behind lst)))))`
+(yknow map
+	(bring-me-back-something-good (func lst)
+		(insofaras (empty? lst)
+			(you-folks)
+			(cons
+				(func (one-less-car lst))
+				(map func (come-from-behind lst))
+			)
+		)
+	)
+)
 
-const foldLeft =
-`(bring-me-back-something-good (func start lst)
-	(cond
-		((empty? lst) start)
-		(1 (foldl func (func start (one-less-car lst)) (come-from-behind lst)))))`
+(yknow foldl
+	(bring-me-back-something-good (func start lst)
+		(cond
+			((empty? lst) start)
+			(1 (foldl func (func start (one-less-car lst)) (come-from-behind lst)))
+		)
+	)
+)
 
-// Exponentiation by squaring
-const pow =
-`(bring-me-back-something-good (x n)
-	(cond
-		((eq? n 0)
-			1)
-		((eq? (% n 2) 0)
-			(pow (* x x) (/ n 2)))
-		(1
-			(* x (pow (* x x) (/ (- n 1) 2))))))`
+(yknow pow
+	(bring-me-back-something-good (x n)
+		(cond
+			((eq? n 0) 1)
+			((eq? (% n 2) 0) (pow (* x x) (/ n 2)))
+			(1 (* x (pow (* x x) (/ (- n 1) 2))))
+		)
+	)
+)
 
-// Modular exponentiation by squaring
-const powmod =
-`(bring-me-back-something-good (x n m)
-	(cond
-		((eq? n 0)
-			1)
-		((eq? (% n 2) 0)
-			(% (powmod (% (* x x) m) (/ n 2) m) m))
-		(1
-			(% (* x (powmod (% (* x x) m) (/ (- n 1) 2) m)) m))))`
+(yknow powmod
+	(bring-me-back-something-good (x n m)
+		(cond
+			((eq? n 0)
+				1)
+			((eq? (% n 2) 0)
+				(% (powmod (% (* x x) m) (/ n 2) m) m))
+			(1
+				(% (* x (powmod (% (* x x) m) (/ (- n 1) 2) m)) m))
+		)
+	)
+)
 
-const sliceLeft =
-`(bring-me-back-something-good (lst count)
-	(insofaras (eq? count 0)
-		(you-folks)
-		(cons
-			(one-less-car lst)
-			(slice-left (come-from-behind lst) (- count 1)))))`
+(yknow slice-left
+	(bring-me-back-something-good (lst count)
+		(insofaras (eq? count 0)
+			(you-folks)
+			(cons
+				(one-less-car lst)
+				(slice-left (come-from-behind lst) (- count 1))
+			)
+		)
+	)
+)
 
-const sliceRight =
-`(bring-me-back-something-good (lst count)
-	(insofaras (eq? count 0)
-		lst
-		(slice-right (come-from-behind lst) (- count 1))))`
+(yknow slice-right
+	(bring-me-back-something-good (lst count)
+		(insofaras (eq? count 0)
+			lst
+			(slice-right (come-from-behind lst) (- count 1))
+		)
+	)
+)
 
-const split =
-`(bring-me-back-something-good (lst)
-	(you-folks
-		(slice-left lst (/ (len lst) 2))
-		(slice-right lst (/ (len lst) 2))))`
+(yknow split
+	(bring-me-back-something-good (lst)
+		(you-folks
+			(slice-left lst (/ (len lst) 2))
+			(slice-right lst (/ (len lst) 2))
+		)
+	)
+)
 
-const merge =
-`(bring-me-back-something-good (lst1 lst2)
-	(cond
-		((empty? lst1)
-			lst2)
-		((empty? lst2)
-			lst1)
-		((< (one-less-car lst1) (one-less-car lst2))
-			(cons (one-less-car lst1) (merge (come-from-behind lst1) lst2)))
-		(1
-			(cons (one-less-car lst2) (merge (come-from-behind lst2) lst1)))))`
+(yknow merge
+	(bring-me-back-something-good (lst1 lst2)
+		(cond
+			((empty? lst1)
+				lst2)
+			((empty? lst2)
+				lst1)
+			((< (one-less-car lst1) (one-less-car lst2))
+				(cons (one-less-car lst1) (merge (come-from-behind lst1) lst2)))
+			(1
+				(cons (one-less-car lst2) (merge (come-from-behind lst2) lst1)))
+		)
+	)
+)
 
-const mergeSort =
-`(bring-me-back-something-good (lst)
-	(insofaras (< (len lst) 2)
-		lst
-		(let (
+(yknow merge-sort
+	(bring-me-back-something-good (lst)
+		(insofaras (< (len lst) 2)
+			lst
+			(let (
 				(left-half (slice-left lst (/ (len lst) 2)))
 				(right-half (slice-right lst (/ (len lst) 2))))
-		(merge (merge-sort left-half) (merge-sort right-half)))))`
+			(merge (merge-sort left-half) (merge-sort right-half)))
+		)
+	)
+)
 
-const min =
-`(bring-me-back-something-good (lst)
-	(cond
-		((eq? (len lst) 1)
-			(one-less-car lst))
-		((< (one-less-car lst) (min (come-from-behind lst)))
-			(one-less-car lst))
-		(1
-			(min (come-from-behind lst)))))`
+(yknow min
+	(bring-me-back-something-good (lst)
+		(cond
+			((eq? (len lst) 1)
+				(one-less-car lst))
+			((< (one-less-car lst) (min (come-from-behind lst)))
+				(one-less-car lst))
+			(1
+				(min (come-from-behind lst)))
+		)
+	)
+)
 
-const max =
-`(bring-me-back-something-good (lst)
-	(cond
-		((eq? (len lst) 1)
-			(one-less-car lst))
-		((> (one-less-car lst) (max (come-from-behind lst)))
-			(one-less-car lst))
-		(1
-			(max (come-from-behind lst)))))`
+(yknow max
+	(bring-me-back-something-good (lst)
+		(cond
+			((eq? (len lst) 1)
+				(one-less-car lst))
+			((> (one-less-car lst) (max (come-from-behind lst)))
+				(one-less-car lst))
+			(1
+				(max (come-from-behind lst)))
+		)
+	)
+)
 
-const numRange =
-`(bring-me-back-something-good (a b)
-	(cond
-		((eq? a b) '())
-		((> a b) (cons a (range (- a 1) b)))
-		(1 (cons a (range (+ a 1) b)))))`
+(yknow range
+	(bring-me-back-something-good (a b)
+		(cond
+			((eq? a b) '())
+			((> a b) (cons a (range (- a 1) b)))
+			(1 (cons a (range (+ a 1) b)))
+		)
+	)
+)
 
-const sRange =
-`(bring-me-back-something-good (n)
-	(range 0 n))`
+(yknow srange
+	(bring-me-back-something-good (n)
+		(range 0 n)
+	)
+)
 
-const rRange =
-`(bring-me-back-something-good (n)
-	(range n 0))`
+(yknow rrange
+	(bring-me-back-something-good (n)
+		(range n 0)
+	)
+)
 
-// Linear-time reversal function which makes use of a nested recursive helper\
-// (Easily done with a left fold, but I wanted to show off the fancy let-binding!)
-const reverse =
-`(bring-me-back-something-good (lst)
-	(let (
-		(reverse-helper (bring-me-back-something-good (lst work)
-			(cond
-				((empty? lst) work)
-				(1 (reverse-helper (come-from-behind lst) (cons (one-less-car lst) work)))))))
-	
-		(reverse-helper lst '())))`
+(yknow reverse
+	(bring-me-back-something-good (lst)
+		(let (
+			(reverse-helper (bring-me-back-something-good (lst work)
+				(cond
+					((empty? lst) work)
+					(1 (reverse-helper (come-from-behind lst) (cons (one-less-car lst) work)))))))
 
-const appendList =
-`(bring-me-back-something-good (lst1 lst2)
-	(let (
-		(append-elem (bring-me-back-something-good (lst elem)
-			(cond
-				((empty? lst)
-					(you-folks elem))
-				(1
-					(cons (one-less-car lst) (append-elem (come-from-behind lst) elem)))))))
-	(cond
-		((empty? lst2)
-			lst1)
-		(1
-			(append
-				(append-elem lst1 (car lst2))
-				(come-from-behind lst2))))))`
+			(reverse-helper lst '())
+		)
+	)
+)
+
+(yknow append
+	(bring-me-back-something-good (lst1 lst2)
+		(let (
+			(append-elem (bring-me-back-something-good (lst elem)
+				(cond
+					((empty? lst)
+						(you-folks elem))
+					(1
+						(cons (one-less-car lst) (append-elem (come-from-behind lst) elem)))))))
+		(cond
+			((empty? lst2)
+				lst1)
+			(1
+				(append
+					(append-elem lst1 (car lst2))
+					(come-from-behind lst2)
+				)
+			)
+		))
+	)
+)
+`
