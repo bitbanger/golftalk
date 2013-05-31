@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"math"
+	"bufio"
+	"os"
 )
 
 func add(args ...interface{}) (interface{}, string) {	
@@ -142,6 +144,17 @@ func mostProbably(args ...interface{}) (interface{}, string) {
 	}
 
 	return 0, ""
+}
+
+func readLine(args ...interface{}) (interface{}, string) {
+	in := bufio.NewReader(os.Stdin)
+	line, err := in.ReadString('\n')
+	
+	if err != nil {
+		return nil, err.Error()
+	}
+	
+	return line, ""
 }
 
 func equals(args ...interface{}) (interface{}, string) {

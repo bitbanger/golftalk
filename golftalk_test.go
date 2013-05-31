@@ -193,7 +193,7 @@ func TestCompositeExpressions(t *testing.T) {
 	env := NewEnv()
 	InitGlobalEnv(env)
 	
-	evalExpectInt(t, "(+ (car (merge-sort '(3457 64 24 65 243457 54))) 18)", 42, env)
+	evalExpectInt(t, "(+ (one-less-car (merge-sort '(3457 64 24 65 243457 54))) 18)", 42, env)
 	
 	evalExpectInt(t, "(powmod 102 (one-less-car (come-from-behind (come-from-behind (come-from-behind (merge-sort (map (bring-me-back-something-good (x) (pow 2 x)) '(3 8 2 7 2 4 1))))))) 323)", 68, env)
 }

@@ -184,6 +184,7 @@ func Eval(val interface{}, env *Env) (interface{}, string) {
 					
 					// Evaluate the binding value before it's bound
 					// Allow evaluation error to propagate outward, as usual
+					// NOTE: Is it possible that, during sequential evaluation, the environment could be changed and cause the same text to evaluate as two different things?
 					next, _ := binding.next.(*SexpPair)
 					value, evalErr := Eval(next.val, letEnv)
 					if evalErr != "" {
@@ -464,6 +465,8 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["rrange"], _ = ParseLine(rRange)
 	
 	globalEnv.Dict["reverse"], _ = ParseLine(reverse)
+	
+	globalEnv.Dict["readln"] = readLine
 }
 
 func main() {
