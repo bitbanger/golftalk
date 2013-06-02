@@ -7,69 +7,161 @@ import (
 	"os"
 )
 
-func add(args ...interface{}) (interface{}, string) {	
+func add(args ...interface{}) (interface{}, string) {
+	useFloat := false
 	accumulator := 0
+	fAccumulator := 0.0
 	for _, val := range args {
-		i, ok := val.(int)
-		if !ok {
-			return nil, "Invalid types to add. Must all be int."
+		i, wasInt := val.(int)
+		f, wasFloat := val.(float64)
+		
+		if wasFloat {
+			// Floats can only be added to the float accumulator
+			fAccumulator += f
+			useFloat = true
+		} else if wasInt {
+			// Ints can be added to floats and ints
+			accumulator += i
+			fAccumulator += float64(i)
+		} else {
+			return nil, "Invalid types to add. Must all be int or float."
 		}
-		accumulator += i
 	}
+	
+	if useFloat {
+		return fAccumulator, ""
+	}
+	
 	return accumulator, ""
 }
 
 func subtract(args ...interface{}) (interface{}, string) {
 	switch len(args) {
 		case 0:
-			return nil, "Need at least 1 int to subtract."
+			return nil, "Need at least 1 value to subtract."
 		case 1:
-			val, ok := args[0].(int)
-			if !ok {
-				return nil, "Invalid types to subtract. Must all be int."
+			i, wasInt := args[0].(int)
+			f, wasFloat := args[0].(float64)
+			
+			if wasInt {
+				return 0 - i, ""
+			} else if wasFloat {
+				return 0 - f, ""
+			} else if !wasInt && !wasFloat {
+				return nil, "Invalid types to subtract. Must all be int or float."
 			}
-			return 0 - val, ""
+			
+			return nil, "Something went very wrong in the subtract function."
 	}
-
+	
+	useFloat := false
 	accumulator := 0
+	fAccumulator := 0.0
 	for idx, val := range args {
-		i, ok := val.(int)
-		if !ok {
-			return nil, "Invalid types to subtract. Must all be int."
+		i, wasInt := val.(int)
+		f, wasFloat := val.(float64)
+		
+		if !wasInt && !wasFloat {
+			return nil, "Invalid types to subtract. Must all be int or float."
 		}
+		
 		if idx == 0 {
-			accumulator += i
+			if wasInt {
+				accumulator += i
+				fAccumulator += float64(i)
+			} else if wasFloat {
+				fAccumulator += f
+				useFloat = true
+			}
 		} else {
-			accumulator -= i
+			if wasInt {
+				accumulator -= i
+				fAccumulator -= float64(i)
+			} else if wasFloat {
+				fAccumulator -= f
+				useFloat = true
+			}
 		}
 	}
+	
+	if useFloat {
+		return fAccumulator, ""
+	}
+	
 	return accumulator, ""
 }
 
 func multiply(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
-
-	if !aok || !bok {
-		return nil, "Invalid types to multiply. Must be int and int."
+	useFloat := false
+	accumulator := 1
+	fAccumulator := 1.0
+	for _, val := range args {
+		i, wasInt := val.(int)
+		f, wasFloat := val.(float64)
+		
+		if wasFloat {
+			fAccumulator *= f
+			useFloat = true
+		} else if wasInt {
+			accumulator *= i
+			fAccumulator *= float64(i)
+		} else {
+			return nil, "Invalid types to multiply. Must all be int or float."
+		}
 	}
-
-	return a * b, ""
+	
+	if useFloat {
+		return fAccumulator, ""
+	}
+	
+	return accumulator, ""
 }
 
 func divide(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
-
-	if !aok || !bok {
-		return nil, "Invalid types to divide. Must be int and int."
+	useFloat := false
+	accumulator := 0
+	fAccumulator := 0.0
+	for idx, val := range args {
+		i, wasInt := val.(int)
+		f, wasFloat := val.(float64)
+		
+		// Initialize accumulators with the first value
+		if idx == 0 {
+			if wasInt {
+				accumulator = i
+				fAccumulator = float64(i)
+			} else {
+				fAccumulator = f
+			}
+			
+			continue
+		}
+		
+		if (wasInt && i == 0) || (wasFloat && f == 0.0) {
+			return nil, "Division by zero is currently unsupported."
+		}
+		
+		if wasFloat {
+			fAccumulator /= f
+			useFloat = true
+		} else if wasInt {
+			accumulator /= i
+			fAccumulator /= float64(i)
+		} else {
+			return nil, "Invalid types to divide. Must all be int or float."
+		}
 	}
-
-	if b == 0 {
-		return nil, "Division by zero is currently unsupported."
+	
+	// If we used floats but it was equivalent to an integer, return an integer
+	if float64(accumulator) == fAccumulator {
+		return accumulator, ""
 	}
-
-	return a / b, ""
+	
+	if useFloat {
+		return fAccumulator, ""
+	}
+	
+	return accumulator, ""
 }
 
 func mod(args ...interface{}) (interface{}, string) {
@@ -132,15 +224,32 @@ func not(args ...interface{}) (interface{}, string) {
 }
 
 func mostProbably(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+	i1, wasInt1 := args[0].(int)
+	f1, wasFloat1 := args[0].(float64)
+	
+	i2, wasInt2 := args[1].(int)
+	f2, wasFloat2 := args[1].(float64)
 
-	if !aok || !bok {
-		return nil, "Invalid types to compare. Must be int and int."
+	if (!wasInt1 && !wasFloat1) || (!wasInt2 && !wasFloat2) {
+		return nil, "Invalid types to compare. Each must be int or float."
 	}
-
-	if math.Abs(float64(a) - float64(b)) < 0.5 {
-		return 1, ""
+	
+	if wasInt1 && wasInt2 {
+		if i1 == i2 {
+			return 1, ""
+		}
+	} else if wasInt1 && wasFloat2 {
+		if math.Abs(float64(i1) - f2) < 0.5 {
+			return 1, ""
+		}
+	} else if wasFloat1 && wasInt2 {
+		if math.Abs(f1 - float64(i2)) < 0.5 {
+			return 1, ""
+		}
+	} else if wasFloat1 && wasFloat2 {
+		if math.Abs(f1 - f2) < 0.5 {
+			return 1, ""
+		}
 	}
 
 	return 0, ""
@@ -189,14 +298,24 @@ func isEmpty(args ...interface{}) (interface{}, string) {
 }
 
 func lessThan(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+	i1, wasInt1 := args[0].(int)
+	f1, wasFloat1 := args[0].(float64)
+	
+	i2, wasInt2 := args[1].(int)
+	f2, wasFloat2 := args[1].(float64)
 
-	if !aok || !bok {
-		return nil, "Invalid types to compare. Must be int and int."
+	if (!wasInt1 && !wasFloat1) || (!wasInt2 && !wasFloat2) {
+		return nil, "Invalid types to compare. Each must be int or float."
+	}
+	
+	if wasInt1 {
+		f1 = float64(i1)
+	}
+	if wasInt2 {
+		f2 = float64(i2)
 	}
 
-	if a < b {
+	if f1 < f2 {
 		return 1, ""
 	}
 

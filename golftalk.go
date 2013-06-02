@@ -82,10 +82,10 @@ func SexpToString(sexp interface{}) string {
 	if i, ok := sexp.(int); ok {
 		return fmt.Sprintf("%d", i)
 	}
-
-	// if f, ok := sexp.(float64); ok {
-	// 	return fmt.Sprintf("%f", f)
-	// }
+	
+	if f, ok := sexp.(float64); ok {
+		return fmt.Sprintf("%f", f)
+	}
 
 	if s, ok := sexp.(string); ok {
 		return s
@@ -113,7 +113,7 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 	val := inVal
 	env := inEnv
 	
-	for true {
+	for {
 		sexp := val
 		
 		// Is the sexp just a symbol?
@@ -495,7 +495,7 @@ func main() {
 
 	in := bufio.NewReader(os.Stdin)
 
-	for true {
+	for {
 		fmt.Print("golftalk~$ ")
 		line, err := in.ReadString('\n')
 		

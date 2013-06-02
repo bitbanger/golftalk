@@ -167,9 +167,9 @@ func Atomize(str string) interface{} {
 	}
 
 	// That didn't work? Maybe it's a float
-	// if f, err := strconv.ParseFloat(str, 32); err == nil {
-	// 	return f
-	// }
+	if f, err := strconv.ParseFloat(str, 64); err == nil {
+		return f
+	}
 
 	// Fuck it; it's a string
 	return str
