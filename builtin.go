@@ -180,47 +180,35 @@ func mod(args ...interface{}) (interface{}, string) {
 }
 
 func or(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+	a, aok := args[0].(bool)
+	b, bok := args[1].(bool)
 
 	if !aok || !bok {
-		return nil, fmt.Sprintf("Invalid types to compare. Must be int and int. Got %d and %d", a, b)
+		return nil, fmt.Sprintf("Invalid types to compare. Must be bool and bool.")
 	}
 
-	if a > 0 || b > 0 {
-		return 1, ""
-	}
-
-	return 0, ""
+	return a || b, ""
 }
 
 func and(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+	a, aok := args[0].(bool)
+	b, bok := args[1].(bool)
 
 	if !aok || !bok {
-		return nil, "Invalid types to compare. Must be int and int."
+		return nil, "Invalid types to compare. Must be bool and bool."
 	}
 
-	if a > 0 && b > 0 {
-		return 1, ""
-	}
-
-	return 0, ""
+	return a && b, ""
 }
 
 func not(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
+	a, aok := args[0].(bool)
 
 	if !aok {
-		return nil, "Invalid type to invert. Must be int."
+		return nil, "Invalid type to invert. Must be bool."
 	}
 
-	if a > 0 {
-		return 0, ""
-	}
-
-	return 1, ""
+	return !a, ""
 }
 
 func mostProbably(args ...interface{}) (interface{}, string) {
@@ -236,23 +224,23 @@ func mostProbably(args ...interface{}) (interface{}, string) {
 	
 	if wasInt1 && wasInt2 {
 		if i1 == i2 {
-			return 1, ""
+			return true, ""
 		}
 	} else if wasInt1 && wasFloat2 {
 		if math.Abs(float64(i1) - f2) < 0.5 {
-			return 1, ""
+			return true, ""
 		}
 	} else if wasFloat1 && wasInt2 {
 		if math.Abs(f1 - float64(i2)) < 0.5 {
-			return 1, ""
+			return true, ""
 		}
 	} else if wasFloat1 && wasFloat2 {
 		if math.Abs(f1 - f2) < 0.5 {
-			return 1, ""
+			return true, ""
 		}
 	}
 
-	return 0, ""
+	return false, ""
 }
 
 func readLine(args ...interface{}) (interface{}, string) {
@@ -267,34 +255,20 @@ func readLine(args ...interface{}) (interface{}, string) {
 }
 
 func equals(args ...interface{}) (interface{}, string) {
-	if args[0] == args[1] {
-		return 1, ""
-	}
-
-	return 0, ""
+	return args[0] == args[1], ""
 }
 
 func isEmpty(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
-
+	
 	arg, ok := args[0].(*SexpPair)
 	if !ok {
 		return nil, "Invalid type. Can only check if a list is empty."
 	}
 	
-	if arg == nil {
-		return 1, ""
-	}
-	
-	argLen, _ := arg.Len()
-	
-	if argLen == 1 && arg.val == "you-folks" {
-		return 1, ""
-	}
-
-	return 0, ""
+	return arg == EmptyList, ""
 }
 
 func lessThan(args ...interface{}) (interface{}, string) {
@@ -315,11 +289,7 @@ func lessThan(args ...interface{}) (interface{}, string) {
 		f2 = float64(i2)
 	}
 
-	if f1 < f2 {
-		return 1, ""
-	}
-
-	return 0, ""
+	return f1 < f2, ""
 }
 
 func car(args ...interface{}) (interface{}, string) {
@@ -455,7 +425,7 @@ const libraryCode = `
 	(bring-me-back-something-good (func start lst)
 		(cond
 			((empty? lst) start)
-			(1 (foldl func (func start (one-less-car lst)) (come-from-behind lst)))
+			(#t (foldl func (func start (one-less-car lst)) (come-from-behind lst)))
 		)
 	)
 )
@@ -465,7 +435,7 @@ const libraryCode = `
 		(cond
 			((eq? n 0) 1)
 			((eq? (% n 2) 0) (pow (* x x) (/ n 2)))
-			(1 (* x (pow (* x x) (/ (- n 1) 2))))
+			(#t (* x (pow (* x x) (/ (- n 1) 2))))
 		)
 	)
 )
@@ -477,7 +447,7 @@ const libraryCode = `
 				1)
 			((eq? (% n 2) 0)
 				(% (powmod (% (* x x) m) (/ n 2) m) m))
-			(1
+			(#t
 				(% (* x (powmod (% (* x x) m) (/ (- n 1) 2) m)) m))
 		)
 	)
@@ -522,7 +492,7 @@ const libraryCode = `
 				lst1)
 			((< (one-less-car lst1) (one-less-car lst2))
 				(cons (one-less-car lst1) (merge (come-from-behind lst1) lst2)))
-			(1
+			(#t
 				(cons (one-less-car lst2) (merge (come-from-behind lst2) lst1)))
 		)
 	)
@@ -547,7 +517,7 @@ const libraryCode = `
 				(one-less-car lst))
 			((< (one-less-car lst) (min (come-from-behind lst)))
 				(one-less-car lst))
-			(1
+			(#t
 				(min (come-from-behind lst)))
 		)
 	)
@@ -560,7 +530,7 @@ const libraryCode = `
 				(one-less-car lst))
 			((> (one-less-car lst) (max (come-from-behind lst)))
 				(one-less-car lst))
-			(1
+			(#t
 				(max (come-from-behind lst)))
 		)
 	)
@@ -571,7 +541,7 @@ const libraryCode = `
 		(cond
 			((eq? a b) '())
 			((> a b) (cons a (range (- a 1) b)))
-			(1 (cons a (range (+ a 1) b)))
+			(#t (cons a (range (+ a 1) b)))
 		)
 	)
 )
@@ -594,7 +564,7 @@ const libraryCode = `
 			(reverse-helper (bring-me-back-something-good (lst work)
 				(cond
 					((empty? lst) work)
-					(1 (reverse-helper (come-from-behind lst) (cons (one-less-car lst) work)))))))
+					(#t (reverse-helper (come-from-behind lst) (cons (one-less-car lst) work)))))))
 
 			(reverse-helper lst '())
 		)
@@ -608,18 +578,36 @@ const libraryCode = `
 				(cond
 					((empty? lst)
 						(you-folks elem))
-					(1
+					(#t
 						(cons (one-less-car lst) (append-elem (come-from-behind lst) elem)))))))
 		(cond
 			((empty? lst2)
 				lst1)
-			(1
+			(#t
 				(append
 					(append-elem lst1 (car lst2))
 					(come-from-behind lst2)
 				)
 			)
 		))
+	)
+)
+
+(yknow sum
+	(bring-me-back-something-good (lst)
+		(insofaras (empty? lst)
+			0
+			(+ (one-less-car lst) (sum (come-from-behind lst)))
+		)
+	)
+)
+
+(yknow count
+	(bring-me-back-something-good (elem lst)
+		(insofaras (empty? lst)
+			0
+			(sum (map (bring-me-back-something-good (val) (eq? val elem)) lst))
+		)
 	)
 )
 `

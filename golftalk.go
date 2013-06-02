@@ -86,6 +86,14 @@ func SexpToString(sexp interface{}) string {
 	if f, ok := sexp.(float64); ok {
 		return fmt.Sprintf("%f", f)
 	}
+	
+	if b, ok := sexp.(bool); ok {
+		if b {
+			return "#t"
+		}
+		
+		return "#f"
+	}
 
 	if s, ok := sexp.(string); ok {
 		return s
@@ -238,13 +246,13 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 						if err1 != "" {
 							return nil, err1
 						}
-						testResult, resultOk := eval1.(int)
+						testResult, resultOk := eval1.(bool)
 						if !resultOk {
-							return nil, fmt.Sprintf("Clause #%d's test expression did not evaluate to an int.", clauseNum)
+							return nil, fmt.Sprintf("Clause #%d's test expression did not evaluate to a bool.", clauseNum)
 						}
 						
 						// If the test passed, evaluate and return the result.
-						if testResult > 0 {
+						if testResult {
 							next, _ := clause.next.(*SexpPair)
 							eval2, err2 := Eval(next.val, env)
 							if err2 != "" {
@@ -254,7 +262,7 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 						}
 					}
 					
-					return nil, "At least one test to cond must pass."
+					return nil, "At least one test given to cond must pass."
 				case "if":
 					if !USE_SCHEME_NAMES {
 						break
@@ -272,11 +280,11 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 						return nil, testErr
 					}
 					
-					result, wasInt := evalTest.(int)
+					result, wasInt := evalTest.(bool)
 					
 					if !wasInt {
-						return nil, "Test given to conditional evaluated as a non-integer."
-					} else if result > 0 {
+						return nil, "Test given to conditional did not evaluate to a bool."
+					} else if result {
 						return Eval(conseq, env)
 					} else {
 						return Eval(alt, env)

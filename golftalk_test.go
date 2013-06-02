@@ -38,6 +38,40 @@ func evalExpectInt(t *testing.T, expr string, expect int, env *Env) {
 	}
 }
 
+func evalExpectBool(t *testing.T, expr string, expect bool, env *Env) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(expr, "gives panic:", r)
+		}
+	}()
+	
+	sexps, parseErr := ParseLine(expr)
+	if parseErr != nil {
+		t.Error(expr, "parsing gives error:", parseErr.Error())
+		return
+	}
+
+	//TODO: fix this to do something more sensible than just eval the first one
+	x, err := Eval(sexps[0], env)
+	if err != "" {
+		t.Error(expr, "gives error:", err)
+		return
+	}
+	if x == nil {
+		t.Error(expr, "gives nil want a bool")
+		return
+	}
+	i, typeOk := x.(bool)
+	if !typeOk {
+		t.Errorf("%s gives %v, want a bool\n", expr, x)
+		return
+	}
+	if i != expect {
+		t.Errorf("%s gives %t, want %t\n", expr, i, expect)
+		return
+	}
+}
+
 func evalExpectAsString(t *testing.T, expr string, expect string, env *Env) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -139,8 +173,8 @@ func TestLameBuiltins(t *testing.T) {
 	InitGlobalEnv(env)
 	
 	// This tests the lazy evaluation of conditionals
-	evalExpectInt(t, "(insofaras 1 5 (/ 2 0))", 5, env)
-	evalExpectError(t, "(insofaras 0 5 (/ 2 0))", "Division by zero is currently unsupported.", env)
+	evalExpectInt(t, "(insofaras #t 5 (/ 2 0))", 5, env)
+	evalExpectError(t, "(insofaras #f 5 (/ 2 0))", "Division by zero is currently unsupported.", env)
 }
 
 func TestLetBinding(t *testing.T) {
@@ -205,10 +239,10 @@ func TestIsEmpty(t *testing.T) {
 	env := NewEnv()
 	InitGlobalEnv(env)
 
-	evalExpectInt(t, "(empty? (you-folks ) )", 1, env)
-	evalExpectInt(t, "(empty? (you-folks 1) )", 0, env)
-	evalExpectInt(t, "(empty? (you-folks 1 2 3) )", 0, env)
-	evalExpectInt(t, "(empty? (come-from-behind (you-folks 1)) )", 1, env)
+	evalExpectBool(t, "(empty? (you-folks ) )", true, env)
+	evalExpectBool(t, "(empty? (you-folks 1) )", false, env)
+	evalExpectBool(t, "(empty? (you-folks 1 2 3) )", false, env)
+	evalExpectBool(t, "(empty? (come-from-behind (you-folks 1)) )", true, env)
 
 	evalExpectError(t, "(empty? 1)", "Invalid type. Can only check if a list is empty.", env)
 	evalExpectError(t, "(empty?)", "Invalid arguments. Expecting exactly 1 argument.", env)
