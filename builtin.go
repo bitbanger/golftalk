@@ -179,6 +179,28 @@ func mod(args ...interface{}) (interface{}, string) {
 	return a % b, ""
 }
 
+func sqrt(args ...interface{}) (interface{}, string) {
+	i, wasInt := args[0].(int)
+	f, wasFloat := args[0].(float64)
+	
+	result := 0.0
+	
+	if wasInt {
+		result = math.Sqrt(float64(i))
+	} else if wasFloat {
+		result = math.Sqrt(f)
+	} else {
+		return nil, "Invalid type for square root. Must be int or float."
+	}
+	
+	// Return an int iff we got a perfect square
+	if math.Floor(result) == result {
+		return int(result), ""
+	}
+	
+	return result, ""
+}
+
 func or(args ...interface{}) (interface{}, string) {
 	a, aok := args[0].(bool)
 	b, bok := args[1].(bool)

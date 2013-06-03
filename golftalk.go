@@ -449,13 +449,17 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 	return nil, "Eval is seriously broken."
 }
 
-// InitGlobalEnv initializes the hierarchichal "root" environment with a few built-in functions.
+// InitGlobalEnv initializes the hierarchichal "root" environment with a few built-in functions and constants.
 func InitGlobalEnv(globalEnv *Env) {
+	globalEnv.Dict["pi"] = 3.141592653589793
+	globalEnv.Dict["euler"] = 2.718281828459045
+	
 	globalEnv.Dict["+"] = add
 	globalEnv.Dict["-"] = subtract
 	globalEnv.Dict["*"] = multiply
 	globalEnv.Dict["/"] = divide
 	globalEnv.Dict["%"] = mod
+	globalEnv.Dict["sqrt"] = sqrt
 
 	globalEnv.Dict["or"] = or
 	globalEnv.Dict["and"] = and
