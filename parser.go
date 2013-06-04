@@ -170,11 +170,12 @@ func Atomize(str string) interface{} {
 	if f, err := strconv.ParseFloat(str, 64); err == nil {
 		return f
 	}
-	
+
 	// Is it a boolean? (special kind of string)
-	if str == "#t" {
+	switch(str) {
+	case "#t":
 		return true
-	} else if str == "#f" {
+	case "#f":
 		return false
 	}
 

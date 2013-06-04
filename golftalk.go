@@ -79,29 +79,26 @@ func SplitByRegex(str, regex string) *list.List {
 
 // SexpToString takes a parsed S-expression and returns a string representation, suitable for printing.
 func SexpToString(sexp interface{}) string {
-	if i, ok := sexp.(int); ok {
-		return fmt.Sprintf("%d", i)
-	}
-	
-	if f, ok := sexp.(float64); ok {
-		return fmt.Sprintf("%f", f)
-	}
-	
-	if b, ok := sexp.(bool); ok {
-		if b {
+	switch sexp := sexp.(type) {
+	case int:
+		return fmt.Sprintf("%d", sexp)
+
+	case float64:
+		return fmt.Sprintf("%f", sexp)
+
+	case bool:
+		if sexp {
 			return "#t"
 		}
-		
 		return "#f"
-	}
 
-	if s, ok := sexp.(string); ok {
-		return s
-	}
+	case string:
+		return sexp
 
-	if l, ok := sexp.(*SexpPair); ok {
+	case *SexpPair:
+		l := sexp
 		ret := "("
-		for ; ok && l != EmptyList; l, ok = l.next.(*SexpPair) {
+		for ok := true; ok && l != EmptyList; l, ok = l.next.(*SexpPair) {
 			ret = ret + SexpToString(l.val)
 			if next, nextOk := l.next.(*SexpPair); nextOk && next != EmptyList {
 				ret = ret + " "
@@ -109,7 +106,6 @@ func SexpToString(sexp interface{}) string {
 		}
 		return ret + ")"
 	}
-
 	return ""
 }
 
@@ -279,12 +275,13 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 					if testErr != "" {
 						return nil, testErr
 					}
-					
-					result, wasInt := evalTest.(bool)
-					
-					if !wasInt {
+
+					result, wasBool := evalTest.(bool)
+					if !wasBool {
 						return nil, "Test given to conditional did not evaluate to a bool."
-					} else if result {
+					}
+
+					if result {
 						return Eval(conseq, env)
 					} else {
 						return Eval(alt, env)
