@@ -132,6 +132,7 @@ func divide(args ...interface{}) (interface{}, string) {
 				fAccumulator = float64(i)
 			} else {
 				fAccumulator = f
+				useFloat = true
 			}
 			
 			continue
