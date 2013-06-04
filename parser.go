@@ -179,6 +179,6 @@ func Atomize(str string) interface{} {
 		return false
 	}
 
-	// Fuck it; it's a string
-	return str
+	// Fuck it; it's a symbol
+	return Symbol(str)
 }
