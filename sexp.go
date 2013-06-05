@@ -103,7 +103,8 @@ func (lst *SexpPair) Eval(env *Env) (result interface{}, nextEnv *Env, err strin
 		return lst, env, ""
 	}
 
-	_, argsOk := lst.next.(*SexpPair)
+	// Validate argument list
+	args, argsOk := lst.next.(*SexpPair)
 	if !argsOk {
 		return nil, nil, "Function has invalid argument list."
 	}
@@ -111,21 +112,22 @@ func (lst *SexpPair) Eval(env *Env) (result interface{}, nextEnv *Env, err strin
 	// If sym is not a symbol, s wil be "", which will fall to default correctly
 	sym, _ := lst.val.(Symbol)
 	
+	// Check all "core functions" first (if, lambda, let, etc.)
 	if coreFunc, wasCore := coreFuncs[sym]; wasCore {
 		return coreFunc(lst, env)
 	}
 	
-	// Arg list was validated before this procedure was invoked.
-	args, _ := lst.next.(*SexpPair)
-	
-	
+	// If it wasn't a core function, evaluate the first element of the list as a function to apply to the rest of the list
 	// TODO: Argument number checking
 	evalFunc, funcErr := Eval(lst.val, env)
 	if funcErr != "" {
 		return nil, nil, funcErr
 	}
 
-	var argSlice []interface{}
+	// Convert the arguments into a slice
+	argLen, _ := args.Len()
+	argSlice := make([]interface{}, argLen)
+	i := 0
 	for arg, ok := args, true; arg != EmptyList; arg, ok = arg.next.(*SexpPair) {
 		if !ok {
 			return nil, nil, "Argument list was not a list."
@@ -138,12 +140,16 @@ func (lst *SexpPair) Eval(env *Env) (result interface{}, nextEnv *Env, err strin
 			return nil, nil, evalErr
 		}
 
-		argSlice = append(argSlice, evalArg)
+		argSlice[i] = evalArg
+
+		i++
 	}
 
+	// Check that the evaluated function is of the right type
 	fun, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
+	// Also check if it should be interpreted as a user-generated procedure (for tail-call optimization)
 	proc, wasProc := evalFunc.(Proc)
-
+	
 	if wasProc {
 		// Bind params to args in a new environment
 		argSlice := ToSlice(args)
