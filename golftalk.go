@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"regexp"
-	"container/list"
 	"bufio"
-	"os"
+	"container/list"
+	"fmt"
 	"io"
+	"os"
+	"regexp"
 )
 
 // Should we use the actual Scheme names?
@@ -15,13 +15,13 @@ var USE_SCHEME_NAMES bool = true
 // Env represents an "environment": a scope's mapping of symbol strings to values.
 // Env also provides the ability to search up a scope chain for a value.
 type Env struct {
-	Dict map[string] interface{}
+	Dict  map[string]interface{}
 	Outer *Env
 }
 
 type Proc struct {
-	Vars []Symbol
-	Exp interface{}
+	Vars    []Symbol
+	Exp     interface{}
 	EvalEnv *Env
 }
 
@@ -39,14 +39,14 @@ func (e Env) Find(val string) *Env {
 // NewEnv returns an initialized environment.
 func NewEnv() *Env {
 	env := &Env{}
-	env.Dict = make(map[string] interface{})
+	env.Dict = make(map[string]interface{})
 	return env
 }
 
 // MakeEnv returns an environment initialized with two parallel symbol-value slices and a parent environment pointer.
 func MakeEnv(keys []Symbol, vals []interface{}, outer *Env) *Env {
 	env := &Env{}
-	env.Dict = make(map[string] interface{})
+	env.Dict = make(map[string]interface{})
 
 	for i, key := range keys {
 		env.Dict[string(key)] = vals[i]
@@ -109,7 +109,7 @@ func SexpToString(sexp interface{}) string {
 func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 	val := inVal
 	env := inEnv
-	
+
 	for {
 		sexp := val
 
@@ -132,7 +132,7 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 		// Let's just return it!
 		return sexp, ""
 	}
-	
+
 	return nil, "Eval is seriously broken."
 }
 
@@ -140,7 +140,7 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["pi"] = 3.141592653589793
 	globalEnv.Dict["euler"] = 2.718281828459045
-	
+
 	globalEnv.Dict["+"] = add
 	globalEnv.Dict["-"] = subtract
 	globalEnv.Dict["*"] = multiply
@@ -155,7 +155,7 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["eq?"] = equals
 	globalEnv.Dict["most-probably?"] = mostProbably
 	globalEnv.Dict["empty?"] = isEmpty
-	
+
 	globalEnv.Dict["one-less-car"] = car
 	if USE_SCHEME_NAMES {
 		globalEnv.Dict["car"] = car
@@ -197,7 +197,7 @@ func main() {
 	for {
 		fmt.Print("golftalk~$ ")
 		line, err := in.ReadString('\n')
-		
+
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println("\n\nhave a nice day ;)")

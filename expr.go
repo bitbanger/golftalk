@@ -10,6 +10,7 @@ type Expression interface {
 }
 
 type Symbol string
+
 //Symbol should implement Expression
 var _ Expression = Symbol("")
 

@@ -130,8 +130,7 @@ func parseElement(scanner *Scanner, literal bool, inQuotedList bool, topLevel bo
 func parseList(scanner *Scanner, quoted bool, topLevel bool) (list *SexpPair, err error) {
 	dummy := &SexpPair{"dummy", EmptyList, quoted}
 	tail := dummy
-	for element, err := parseElement(scanner, false, quoted, topLevel); element != ")";
-		element, err = parseElement(scanner, false, quoted, topLevel) {
+	for element, err := parseElement(scanner, false, quoted, topLevel); element != ")"; element, err = parseElement(scanner, false, quoted, topLevel) {
 
 		if err == io.EOF && topLevel {
 			return dummy.next.(*SexpPair), nil
@@ -172,7 +171,7 @@ func Atomize(str string) interface{} {
 	}
 
 	// Is it a boolean? (special kind of string)
-	switch(str) {
+	switch str {
 	case "#t":
 		return true
 	case "#f":

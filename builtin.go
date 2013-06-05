@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"math"
-	"bufio"
 	"os"
 )
 
@@ -14,7 +14,7 @@ func add(args ...interface{}) (interface{}, string) {
 	for _, val := range args {
 		i, wasInt := val.(int)
 		f, wasFloat := val.(float64)
-		
+
 		if wasFloat {
 			// Floats can only be added to the float accumulator
 			fAccumulator += f
@@ -27,44 +27,44 @@ func add(args ...interface{}) (interface{}, string) {
 			return nil, "Invalid types to add. Must all be int or float."
 		}
 	}
-	
+
 	if useFloat {
 		return fAccumulator, ""
 	}
-	
+
 	return accumulator, ""
 }
 
 func subtract(args ...interface{}) (interface{}, string) {
 	switch len(args) {
-		case 0:
-			return nil, "Need at least 1 value to subtract."
-		case 1:
-			i, wasInt := args[0].(int)
-			f, wasFloat := args[0].(float64)
-			
-			if wasInt {
-				return 0 - i, ""
-			} else if wasFloat {
-				return 0 - f, ""
-			} else if !wasInt && !wasFloat {
-				return nil, "Invalid types to subtract. Must all be int or float."
-			}
-			
-			return nil, "Something went very wrong in the subtract function."
+	case 0:
+		return nil, "Need at least 1 value to subtract."
+	case 1:
+		i, wasInt := args[0].(int)
+		f, wasFloat := args[0].(float64)
+
+		if wasInt {
+			return 0 - i, ""
+		} else if wasFloat {
+			return 0 - f, ""
+		} else if !wasInt && !wasFloat {
+			return nil, "Invalid types to subtract. Must all be int or float."
+		}
+
+		return nil, "Something went very wrong in the subtract function."
 	}
-	
+
 	useFloat := false
 	accumulator := 0
 	fAccumulator := 0.0
 	for idx, val := range args {
 		i, wasInt := val.(int)
 		f, wasFloat := val.(float64)
-		
+
 		if !wasInt && !wasFloat {
 			return nil, "Invalid types to subtract. Must all be int or float."
 		}
-		
+
 		if idx == 0 {
 			if wasInt {
 				accumulator += i
@@ -83,11 +83,11 @@ func subtract(args ...interface{}) (interface{}, string) {
 			}
 		}
 	}
-	
+
 	if useFloat {
 		return fAccumulator, ""
 	}
-	
+
 	return accumulator, ""
 }
 
@@ -98,7 +98,7 @@ func multiply(args ...interface{}) (interface{}, string) {
 	for _, val := range args {
 		i, wasInt := val.(int)
 		f, wasFloat := val.(float64)
-		
+
 		if wasFloat {
 			fAccumulator *= f
 			useFloat = true
@@ -109,11 +109,11 @@ func multiply(args ...interface{}) (interface{}, string) {
 			return nil, "Invalid types to multiply. Must all be int or float."
 		}
 	}
-	
+
 	if useFloat {
 		return fAccumulator, ""
 	}
-	
+
 	return accumulator, ""
 }
 
@@ -124,7 +124,7 @@ func divide(args ...interface{}) (interface{}, string) {
 	for idx, val := range args {
 		i, wasInt := val.(int)
 		f, wasFloat := val.(float64)
-		
+
 		// Initialize accumulators with the first value
 		if idx == 0 {
 			if wasInt {
@@ -134,14 +134,14 @@ func divide(args ...interface{}) (interface{}, string) {
 				fAccumulator = f
 				useFloat = true
 			}
-			
+
 			continue
 		}
-		
+
 		if (wasInt && i == 0) || (wasFloat && f == 0.0) {
 			return nil, "Division by zero is currently unsupported."
 		}
-		
+
 		if wasFloat {
 			fAccumulator /= f
 			useFloat = true
@@ -152,16 +152,16 @@ func divide(args ...interface{}) (interface{}, string) {
 			return nil, "Invalid types to divide. Must all be int or float."
 		}
 	}
-	
+
 	// If we used floats but it was equivalent to an integer, return an integer
 	if float64(accumulator) == fAccumulator {
 		return accumulator, ""
 	}
-	
+
 	if useFloat {
 		return fAccumulator, ""
 	}
-	
+
 	return accumulator, ""
 }
 
@@ -183,9 +183,9 @@ func mod(args ...interface{}) (interface{}, string) {
 func sqrt(args ...interface{}) (interface{}, string) {
 	i, wasInt := args[0].(int)
 	f, wasFloat := args[0].(float64)
-	
+
 	result := 0.0
-	
+
 	if wasInt {
 		result = math.Sqrt(float64(i))
 	} else if wasFloat {
@@ -193,12 +193,12 @@ func sqrt(args ...interface{}) (interface{}, string) {
 	} else {
 		return nil, "Invalid type for square root. Must be int or float."
 	}
-	
+
 	// Return an int iff we got a perfect square
 	if math.Floor(result) == result {
 		return int(result), ""
 	}
-	
+
 	return result, ""
 }
 
@@ -237,28 +237,28 @@ func not(args ...interface{}) (interface{}, string) {
 func mostProbably(args ...interface{}) (interface{}, string) {
 	i1, wasInt1 := args[0].(int)
 	f1, wasFloat1 := args[0].(float64)
-	
+
 	i2, wasInt2 := args[1].(int)
 	f2, wasFloat2 := args[1].(float64)
 
 	if (!wasInt1 && !wasFloat1) || (!wasInt2 && !wasFloat2) {
 		return nil, "Invalid types to compare. Each must be int or float."
 	}
-	
+
 	if wasInt1 && wasInt2 {
 		if i1 == i2 {
 			return true, ""
 		}
 	} else if wasInt1 && wasFloat2 {
-		if math.Abs(float64(i1) - f2) < 0.5 {
+		if math.Abs(float64(i1)-f2) < 0.5 {
 			return true, ""
 		}
 	} else if wasFloat1 && wasInt2 {
-		if math.Abs(f1 - float64(i2)) < 0.5 {
+		if math.Abs(f1-float64(i2)) < 0.5 {
 			return true, ""
 		}
 	} else if wasFloat1 && wasFloat2 {
-		if math.Abs(f1 - f2) < 0.5 {
+		if math.Abs(f1-f2) < 0.5 {
 			return true, ""
 		}
 	}
@@ -269,11 +269,11 @@ func mostProbably(args ...interface{}) (interface{}, string) {
 func readLine(args ...interface{}) (interface{}, string) {
 	in := bufio.NewReader(os.Stdin)
 	line, err := in.ReadString('\n')
-	
+
 	if err != nil {
 		return nil, err.Error()
 	}
-	
+
 	return line, ""
 }
 
@@ -285,26 +285,26 @@ func isEmpty(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
-	
+
 	arg, ok := args[0].(*SexpPair)
 	if !ok {
 		return nil, "Invalid type. Can only check if a list is empty."
 	}
-	
+
 	return arg == EmptyList, ""
 }
 
 func lessThan(args ...interface{}) (interface{}, string) {
 	i1, wasInt1 := args[0].(int)
 	f1, wasFloat1 := args[0].(float64)
-	
+
 	i2, wasInt2 := args[1].(int)
 	f2, wasFloat2 := args[1].(float64)
 
 	if (!wasInt1 && !wasFloat1) || (!wasInt2 && !wasFloat2) {
 		return nil, "Invalid types to compare. Each must be int or float."
 	}
-	
+
 	if wasInt1 {
 		f1 = float64(i1)
 	}
@@ -319,16 +319,16 @@ func car(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
-	
+
 	if args[0] == nil {
 		return nil, "Cannot take the car of an empty list."
 	}
-	
+
 	lst, ok := args[0].(*SexpPair)
 	if !ok {
 		return nil, "Invalid type. Can only take the car of a list."
 	}
-	
+
 	return lst.val, ""
 }
 
@@ -336,16 +336,16 @@ func comeFromBehind(args ...interface{}) (interface{}, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
-	
+
 	if args[0] == nil {
 		return nil, "Cannot take the cdr of an empty list."
 	}
-	
+
 	lst, ok := args[0].(*SexpPair)
 	if !ok {
 		return nil, "Invalid type. Can only take the cdr of a list."
 	}
-	
+
 	return lst.next, ""
 }
 
@@ -353,7 +353,7 @@ func cons(args ...interface{}) (interface{}, string) {
 	if len(args) != 2 {
 		return nil, "Invalid arguments. Expecting exactly 2 arguments."
 	}
-	
+
 	head := args[0]
 	lst, ok := args[1].(*SexpPair)
 	if !ok {
@@ -367,11 +367,11 @@ func cons(args ...interface{}) (interface{}, string) {
 
 func youFolks(args ...interface{}) (interface{}, string) {
 	var head *SexpPair = EmptyList
-	
+
 	for i := len(args) - 1; i >= 0; i-- {
 		head = &SexpPair{args[i], head, true}
 	}
-	
+
 	return head, ""
 }
 

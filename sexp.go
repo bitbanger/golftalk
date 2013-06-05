@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 )
 
 type SexpPair struct {
@@ -71,28 +71,28 @@ func SetIsLiteral(lst *SexpPair, l bool) {
 	}
 }
 
-var coreFuncs = map[Symbol] CoreFunc {
-	"yknow": coreDefine,
+var coreFuncs = map[Symbol]CoreFunc{
+	"yknow":  coreDefine,
 	"define": coreDefine,
-	
+
 	"insofaras": coreIf,
-	"if": coreIf,
-	
+	"if":        coreIf,
+
 	"bring-me-back-something-good": coreLambda,
-	"lambda": coreLambda,
-	
+	"lambda":                       coreLambda,
+
 	"this-guy": coreQuote,
-	"quote": coreQuote,
-	
+	"quote":    coreQuote,
+
 	"crunch-crunch-crunch": coreApply,
-	"apply": coreApply,
-	
+	"apply":                coreApply,
+
 	"let": coreLet,
-	
+
 	"cond": coreCond,
-	
+
 	"begin": coreBegin,
-	
+
 	"exit": haveANiceDay,
 }
 
@@ -108,15 +108,15 @@ func (lst *SexpPair) Eval(env *Env) (result interface{}, nextEnv *Env, err strin
 	if !argsOk {
 		return nil, nil, "Function has invalid argument list."
 	}
-	
+
 	// If sym is not a symbol, s wil be "", which will fall to default correctly
 	sym, _ := lst.val.(Symbol)
-	
+
 	// Check all "core functions" first (if, lambda, let, etc.)
 	if coreFunc, wasCore := coreFuncs[sym]; wasCore {
 		return coreFunc(lst, env)
 	}
-	
+
 	// If it wasn't a core function, evaluate the first element of the list as a function to apply to the rest of the list
 	// TODO: Argument number checking
 	evalFunc, funcErr := Eval(lst.val, env)
@@ -149,7 +149,7 @@ func (lst *SexpPair) Eval(env *Env) (result interface{}, nextEnv *Env, err strin
 	fun, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 	// Also check if it should be interpreted as a user-generated procedure (for tail-call optimization)
 	proc, wasProc := evalFunc.(Proc)
-	
+
 	if wasProc {
 		// Bind params to args in a new environment
 		argSlice := ToSlice(args)
@@ -172,7 +172,7 @@ func (lst *SexpPair) Eval(env *Env) (result interface{}, nextEnv *Env, err strin
 	} else {
 		return nil, nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", lst.val)
 	}
-	
+
 	panic(errors.New("list failed to evaluate correctly"))
 }
 
