@@ -248,3 +248,28 @@ func TestIsEmpty(t *testing.T) {
 	evalExpectError(t, "(empty?)", "Invalid arguments. Expecting exactly 1 argument.", env)
 	evalExpectError(t, "(empty? (you-folks) (you-folks))", "Invalid arguments. Expecting exactly 1 argument.", env)
 }
+
+func BenchmarkFib(b *testing.B) {
+	env := NewEnv()
+	InitGlobalEnv(env)
+
+	expr := &SexpPair{Symbol("fib"), &SexpPair{int(25), EmptyList, false}, false}
+
+	b.ResetTimer()
+	for t := 0; t < b.N; t++ {
+		result, err := Eval(expr, env)
+		if err != "" {
+			b.Error("fib returned error:", err)
+			continue
+		}
+		i, ok := result.(int)
+		if !ok {
+			b.Error("fib did not return an int!")
+			continue
+		}
+		if i != 75025 {
+			b.Error("fib returned wrong result!")
+			continue
+		}
+	}
+}
