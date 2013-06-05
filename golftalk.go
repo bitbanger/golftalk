@@ -15,7 +15,7 @@ var USE_SCHEME_NAMES bool = true
 // Env represents an "environment": a scope's mapping of symbol strings to values.
 // Env also provides the ability to search up a scope chain for a value.
 type Env struct {
-	Dict map[string]interface{}
+	Dict map[string] interface{}
 	Outer *Env
 }
 
@@ -39,14 +39,14 @@ func (e Env) Find(val string) *Env {
 // NewEnv returns an initialized environment.
 func NewEnv() *Env {
 	env := &Env{}
-	env.Dict = make(map[string]interface{})
+	env.Dict = make(map[string] interface{})
 	return env
 }
 
 // MakeEnv returns an environment initialized with two parallel symbol-value slices and a parent environment pointer.
 func MakeEnv(keys []Symbol, vals []interface{}, outer *Env) *Env {
 	env := &Env{}
-	env.Dict = make(map[string]interface{})
+	env.Dict = make(map[string] interface{})
 
 	for i, key := range keys {
 		env.Dict[string(key)] = vals[i]
