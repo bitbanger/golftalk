@@ -27,9 +27,9 @@ type Proc struct {
 }
 
 // Find returns the closest parent scope with an extant mapping between a given symbol and any value.
-func (e Env) Find(val string) *Env {
+func (e *Env) Find(val string) *Env {
 	if e.Dict[val] != nil {
-		return &e
+		return e
 	} else if e.Outer != nil {
 		return e.Outer.Find(val)
 	}
