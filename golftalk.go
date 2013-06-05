@@ -83,7 +83,7 @@ func SexpToString(sexp interface{}) string {
 		return fmt.Sprintf("%d", sexp)
 
 	case float64:
-		return fmt.Sprintf("%f", sexp)
+		return fmt.Sprintf("%g", sexp)
 
 	case bool:
 		if sexp {
