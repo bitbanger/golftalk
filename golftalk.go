@@ -20,6 +20,7 @@ type Env struct {
 }
 
 type Proc struct {
+	Name    string
 	Vars    []Symbol
 	Exp     interface{}
 	EvalEnv *Env
@@ -93,6 +94,15 @@ func SexpToString(sexp interface{}) string {
 
 	case string:
 		return sexp
+
+	case Proc:
+		if sexp.Name != "" {
+			return fmt.Sprintf("#<procedure:%s>", sexp.Name)
+		}
+
+		return "#<procedure>"
+
+	// TODO: Make core functions and non-lambda builtins display names as well, somehow.
 
 	case *SexpPair:
 		return sexp.String()

@@ -23,7 +23,14 @@ func coreDefine(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err 
 		return nil, nil, evalErr
 	}
 
-	env.Dict[string(sym)] = evalExp
+	// If we're binding a function to this name, make sure the function literal knows what it's called.
+	// This is just to conform with Racket's function display technique. It's not used in the actual execution of the function!
+	if proc, wasProc := evalExp.(Proc); wasProc {
+		proc.Name = string(sym)
+		env.Dict[string(sym)] = proc
+	} else {
+		env.Dict[string(sym)] = evalExp
+	}
 
 	return nil, nil, ""
 }
@@ -70,7 +77,7 @@ func coreLambda(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err 
 		lambVars[i] = lambVar
 	}
 
-	return Proc{lambVars, exp, env}, env, ""
+	return Proc{"", lambVars, exp, env}, env, ""
 }
 
 func coreQuote(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
