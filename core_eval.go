@@ -48,7 +48,7 @@ func coreIf(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err stri
 		return nil, nil, testErr
 	}
 
-	res, wasBool := evalTest.(bool)
+	res, wasBool := evalTest.(PTBool)
 	if !wasBool {
 		return nil, nil, "Test given to conditional did not evaluate to a bool."
 	}
@@ -214,7 +214,7 @@ func coreCond(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err st
 		if err1 != "" {
 			return nil, nil, err1
 		}
-		testResult, resultOk := eval1.(bool)
+		testResult, resultOk := eval1.(PTBool)
 		if !resultOk {
 			return nil, nil, fmt.Sprintf("Clause #%d's test expression did not evaluate to a bool.", clauseNum)
 		}

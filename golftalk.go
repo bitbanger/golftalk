@@ -73,15 +73,6 @@ func SplitByRegex(str, regex string) *list.List {
 // SexpToString takes a parsed S-expression and returns a string representation, suitable for printing.
 func SexpToString(sexp interface{}) string {
 	switch sexp := sexp.(type) {
-	case float64:
-		return fmt.Sprintf("%g", sexp)
-
-	case bool:
-		if sexp {
-			return "#t"
-		}
-		return "#f"
-
 	case string:
 		return sexp
 

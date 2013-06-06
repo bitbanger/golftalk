@@ -61,12 +61,12 @@ func evalExpectBool(t *testing.T, expr string, expect bool, env *Env) {
 		t.Error(expr, "gives nil want a bool")
 		return
 	}
-	i, typeOk := x.(bool)
+	i, typeOk := x.(PTBool)
 	if !typeOk {
 		t.Errorf("%s gives %v, want a bool\n", expr, x)
 		return
 	}
-	if i != expect {
+	if i != PTBool(expect) {
 		t.Errorf("%s gives %t, want %t\n", expr, i, expect)
 		return
 	}

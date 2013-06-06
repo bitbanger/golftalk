@@ -167,15 +167,15 @@ func Atomize(str string) interface{} {
 
 	// That didn't work? Maybe it's a float
 	if f, err := strconv.ParseFloat(str, 64); err == nil {
-		return f
+		return PTFloat(f)
 	}
 
 	// Is it a boolean? (special kind of string)
 	switch str {
 	case "#t":
-		return true
+		return PTBool(true)
 	case "#f":
-		return false
+		return PTBool(false)
 	}
 
 	// Fuck it; it's a symbol

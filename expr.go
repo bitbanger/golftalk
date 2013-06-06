@@ -48,3 +48,40 @@ func (i PTInt) String() string {
 func (_ PTInt) IsLiteral() bool {
 	return true
 }
+
+type PTFloat float64
+
+//PTFloat should implement Expression
+var _ Expression = PTFloat(0.0)
+
+func (f PTFloat) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+	return f, env, ""
+}
+
+func (f PTFloat) String() string {
+	return fmt.Sprintf("%g", f)
+}
+
+func (_ PTFloat) IsLiteral() bool {
+	return true
+}
+
+type PTBool bool
+
+//PTBool should implement Expression
+var _ Expression = PTBool(false)
+
+func (b PTBool) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+	return b, env, ""
+}
+
+func (b PTBool) String() string {
+	if b {
+		return "#t"
+	}
+	return "#f"
+}
+
+func (_ PTBool) IsLiteral() bool {
+	return true
+}

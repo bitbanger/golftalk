@@ -10,10 +10,10 @@ import (
 func add(args ...interface{}) (interface{}, string) {
 	useFloat := false
 	accumulator := PTInt(0)
-	fAccumulator := 0.0
+	fAccumulator := PTFloat(0.0)
 	for _, val := range args {
 		i, wasInt := val.(PTInt)
-		f, wasFloat := val.(float64)
+		f, wasFloat := val.(PTFloat)
 
 		if wasFloat {
 			// Floats can only be added to the float accumulator
@@ -22,7 +22,7 @@ func add(args ...interface{}) (interface{}, string) {
 		} else if wasInt {
 			// Ints can be added to floats and ints
 			accumulator += i
-			fAccumulator += float64(i)
+			fAccumulator += PTFloat(i)
 		} else {
 			return nil, "Invalid types to add. Must all be int or float."
 		}
@@ -41,7 +41,7 @@ func subtract(args ...interface{}) (interface{}, string) {
 		return nil, "Need at least 1 value to subtract."
 	case 1:
 		i, wasInt := args[0].(PTInt)
-		f, wasFloat := args[0].(float64)
+		f, wasFloat := args[0].(PTFloat)
 
 		if wasInt {
 			return 0 - i, ""
@@ -56,10 +56,10 @@ func subtract(args ...interface{}) (interface{}, string) {
 
 	useFloat := false
 	accumulator := PTInt(0)
-	fAccumulator := 0.0
+	fAccumulator := PTFloat(0.0)
 	for idx, val := range args {
 		i, wasInt := val.(PTInt)
-		f, wasFloat := val.(float64)
+		f, wasFloat := val.(PTFloat)
 
 		if !wasInt && !wasFloat {
 			return nil, "Invalid types to subtract. Must all be int or float."
@@ -68,7 +68,7 @@ func subtract(args ...interface{}) (interface{}, string) {
 		if idx == 0 {
 			if wasInt {
 				accumulator += i
-				fAccumulator += float64(i)
+				fAccumulator += PTFloat(i)
 			} else if wasFloat {
 				fAccumulator += f
 				useFloat = true
@@ -76,7 +76,7 @@ func subtract(args ...interface{}) (interface{}, string) {
 		} else {
 			if wasInt {
 				accumulator -= i
-				fAccumulator -= float64(i)
+				fAccumulator -= PTFloat(i)
 			} else if wasFloat {
 				fAccumulator -= f
 				useFloat = true
@@ -94,17 +94,17 @@ func subtract(args ...interface{}) (interface{}, string) {
 func multiply(args ...interface{}) (interface{}, string) {
 	useFloat := false
 	accumulator := PTInt(1)
-	fAccumulator := 1.0
+	fAccumulator := PTFloat(1.0)
 	for _, val := range args {
 		i, wasInt := val.(PTInt)
-		f, wasFloat := val.(float64)
+		f, wasFloat := val.(PTFloat)
 
 		if wasFloat {
 			fAccumulator *= f
 			useFloat = true
 		} else if wasInt {
 			accumulator *= i
-			fAccumulator *= float64(i)
+			fAccumulator *= PTFloat(i)
 		} else {
 			return nil, "Invalid types to multiply. Must all be int or float."
 		}
@@ -120,16 +120,16 @@ func multiply(args ...interface{}) (interface{}, string) {
 func divide(args ...interface{}) (interface{}, string) {
 	useFloat := false
 	accumulator := PTInt(0)
-	fAccumulator := 0.0
+	fAccumulator := PTFloat(0.0)
 	for idx, val := range args {
 		i, wasInt := val.(PTInt)
-		f, wasFloat := val.(float64)
+		f, wasFloat := val.(PTFloat)
 
 		// Initialize accumulators with the first value
 		if idx == 0 {
 			if wasInt {
 				accumulator = i
-				fAccumulator = float64(i)
+				fAccumulator = PTFloat(i)
 			} else {
 				fAccumulator = f
 				useFloat = true
@@ -147,14 +147,14 @@ func divide(args ...interface{}) (interface{}, string) {
 			useFloat = true
 		} else if wasInt {
 			accumulator /= i
-			fAccumulator /= float64(i)
+			fAccumulator /= PTFloat(i)
 		} else {
 			return nil, "Invalid types to divide. Must all be int or float."
 		}
 	}
 
 	// If we used floats but it was equivalent to an integer, return an integer
-	if float64(accumulator) == fAccumulator {
+	if PTFloat(accumulator) == fAccumulator {
 		return accumulator, ""
 	}
 
@@ -182,20 +182,20 @@ func mod(args ...interface{}) (interface{}, string) {
 
 func sqrt(args ...interface{}) (interface{}, string) {
 	i, wasInt := args[0].(PTInt)
-	f, wasFloat := args[0].(float64)
+	f, wasFloat := args[0].(PTFloat)
 
-	result := 0.0
+	result := PTFloat(0.0)
 
 	if wasInt {
-		result = math.Sqrt(float64(i))
+		result = PTFloat(math.Sqrt(float64(i)))
 	} else if wasFloat {
-		result = math.Sqrt(f)
+		result = PTFloat(math.Sqrt(float64(f)))
 	} else {
 		return nil, "Invalid type for square root. Must be int or float."
 	}
 
 	// Return an int iff we got a perfect square
-	if math.Floor(result) == result {
+	if math.Floor(float64(result)) == float64(result) {
 		return PTInt(result), ""
 	}
 
@@ -203,8 +203,8 @@ func sqrt(args ...interface{}) (interface{}, string) {
 }
 
 func or(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(bool)
-	b, bok := args[1].(bool)
+	a, aok := args[0].(PTBool)
+	b, bok := args[1].(PTBool)
 
 	if !aok || !bok {
 		return nil, fmt.Sprintf("Invalid types to compare. Must be bool and bool.")
@@ -214,8 +214,8 @@ func or(args ...interface{}) (interface{}, string) {
 }
 
 func and(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(bool)
-	b, bok := args[1].(bool)
+	a, aok := args[0].(PTBool)
+	b, bok := args[1].(PTBool)
 
 	if !aok || !bok {
 		return nil, "Invalid types to compare. Must be bool and bool."
@@ -225,7 +225,7 @@ func and(args ...interface{}) (interface{}, string) {
 }
 
 func not(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(bool)
+	a, aok := args[0].(PTBool)
 
 	if !aok {
 		return nil, "Invalid type to invert. Must be bool."
@@ -236,10 +236,10 @@ func not(args ...interface{}) (interface{}, string) {
 
 func mostProbably(args ...interface{}) (interface{}, string) {
 	i1, wasInt1 := args[0].(PTInt)
-	f1, wasFloat1 := args[0].(float64)
+	f1, wasFloat1 := args[0].(PTFloat)
 
 	i2, wasInt2 := args[1].(PTInt)
-	f2, wasFloat2 := args[1].(float64)
+	f2, wasFloat2 := args[1].(PTFloat)
 
 	if (!wasInt1 && !wasFloat1) || (!wasInt2 && !wasFloat2) {
 		return nil, "Invalid types to compare. Each must be int or float."
@@ -247,23 +247,23 @@ func mostProbably(args ...interface{}) (interface{}, string) {
 
 	if wasInt1 && wasInt2 {
 		if i1 == i2 {
-			return true, ""
+			return PTBool(true), ""
 		}
 	} else if wasInt1 && wasFloat2 {
-		if math.Abs(float64(i1)-f2) < 0.5 {
-			return true, ""
+		if math.Abs(float64(i1)-float64(f2)) < 0.5 {
+			return PTBool(true), ""
 		}
 	} else if wasFloat1 && wasInt2 {
-		if math.Abs(f1-float64(i2)) < 0.5 {
-			return true, ""
+		if math.Abs(float64(f1)-float64(i2)) < 0.5 {
+			return PTBool(true), ""
 		}
 	} else if wasFloat1 && wasFloat2 {
-		if math.Abs(f1-f2) < 0.5 {
-			return true, ""
+		if math.Abs(float64(f1)-float64(f2)) < 0.5 {
+			return PTBool(true), ""
 		}
 	}
 
-	return false, ""
+	return PTBool(false), ""
 }
 
 func readLine(args ...interface{}) (interface{}, string) {
@@ -278,7 +278,7 @@ func readLine(args ...interface{}) (interface{}, string) {
 }
 
 func equals(args ...interface{}) (interface{}, string) {
-	return args[0] == args[1], ""
+	return PTBool(args[0] == args[1]), ""
 }
 
 func isEmpty(args ...interface{}) (interface{}, string) {
@@ -291,28 +291,28 @@ func isEmpty(args ...interface{}) (interface{}, string) {
 		return nil, "Invalid type. Can only check if a list is empty."
 	}
 
-	return arg == EmptyList, ""
+	return PTBool(arg == EmptyList), ""
 }
 
 func lessThan(args ...interface{}) (interface{}, string) {
 	i1, wasInt1 := args[0].(PTInt)
-	f1, wasFloat1 := args[0].(float64)
+	f1, wasFloat1 := args[0].(PTFloat)
 
 	i2, wasInt2 := args[1].(PTInt)
-	f2, wasFloat2 := args[1].(float64)
+	f2, wasFloat2 := args[1].(PTFloat)
 
 	if (!wasInt1 && !wasFloat1) || (!wasInt2 && !wasFloat2) {
 		return nil, "Invalid types to compare. Each must be int or float."
 	}
 
 	if wasInt1 {
-		f1 = float64(i1)
+		f1 = PTFloat(i1)
 	}
 	if wasInt2 {
-		f2 = float64(i2)
+		f2 = PTFloat(i2)
 	}
 
-	return f1 < f2, ""
+	return PTBool(f1 < f2), ""
 }
 
 func car(args ...interface{}) (interface{}, string) {
