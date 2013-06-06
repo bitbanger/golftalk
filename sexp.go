@@ -128,37 +128,11 @@ func (lst *SexpPair) Eval(env *Env) (result interface{}, nextEnv *Env, err strin
 		return nil, nil, funcErr
 	}
 
-	// Convert the arguments into a slice
-	argLen, _ := args.Len()
-	argSlice := make([]interface{}, argLen)
-	i := 0
-	for arg, ok := args, true; arg != EmptyList; arg, ok = arg.next.(*SexpPair) {
-		if !ok {
-			return nil, nil, "Argument list was not a list."
-		}
-
-		evalArg, evalErr := Eval(arg.val, env)
-
-		// Errors propagate upward
-		if evalErr != "" {
-			return nil, nil, evalErr
-		}
-
-		argSlice[i] = evalArg
-
-		i++
-	}
-
-	// Check that the evaluated function is of the right type
-	fun, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
-	// Also check if it should be interpreted as a user-generated procedure (for tail-call optimization)
+	// Check if it should be interpreted as a procedure
 	proc, wasProc := evalFunc.(Procedure)
 
 	if wasProc {
 		return proc.Apply(args, env)
-	} else if wasFunc {
-		result, err = fun(argSlice...)
-		return result, nextEnv, err
 	} else {
 		return nil, nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", lst.val)
 	}

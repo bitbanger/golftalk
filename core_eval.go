@@ -102,21 +102,18 @@ func coreApply(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err s
 	args, _ := lst.next.(*SexpPair)
 
 	evalFunc, _ := Eval(Get(args, 0), env)
-	proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
-	evalList, _ := Eval(Get(args, 1), env)
-	args, wasList := evalList.(*SexpPair)
-
+	proc, wasFunc := evalFunc.(Procedure)
 	if !wasFunc {
 		return nil, nil, "Function given to apply doesn't evaluate as a function."
 	}
 
+	evalList, _ := Eval(Get(args, 1), env)
+	args, wasList := evalList.(*SexpPair)
 	if !wasList {
 		return nil, nil, "List given to apply doesn't evaluate as a list."
 	}
 
-	argArr := ToSlice(args)
-	result, err = proc(argArr...)
-	return result, env, err
+	return proc.Apply(args, env)
 }
 
 func coreLet(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {

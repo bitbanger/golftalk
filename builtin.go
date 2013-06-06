@@ -375,6 +375,34 @@ func youFolks(args ...interface{}) (interface{}, string) {
 	return head, ""
 }
 
+var goLibraryProcs map[string]goProcPtr = map[string]goProcPtr{
+	"+":                add,
+	"-":                subtract,
+	"*":                multiply,
+	"/":                divide,
+	"%":                mod,
+	"sqrt":             sqrt,
+	"or":               or,
+	"and":              and,
+	"not":              not,
+	"eq?":              equals,
+	"most-probably?":   mostProbably,
+	"empty?":           isEmpty,
+	"one-less-car":     car,
+	"come-from-behind": comeFromBehind,
+	"cons":             cons,
+	"you-folks":        youFolks,
+	"<":                lessThan,
+	"readln":           readLine,
+}
+
+var alternateNames map[string]string = map[string]string{
+	"car":  "car",
+	"cdr":  "comeFromBehind",
+	"list": "youFolks",
+	"fact": "in-fact",
+}
+
 //proftalk library code
 const libraryCode = `
 (yknow >
