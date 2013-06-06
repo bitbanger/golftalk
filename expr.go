@@ -85,3 +85,34 @@ func (b PTBool) String() string {
 func (_ PTBool) IsLiteral() bool {
 	return true
 }
+
+type QuotedSymbol string
+
+func (s QuotedSymbol) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+	return s, env, ""
+}
+
+func (s QuotedSymbol) String() string {
+	return "'" + string(s)
+}
+
+func (_ QuotedSymbol) IsLiteral() bool {
+	return true
+}
+
+//Used only to have some special functions be able to return nothing
+type PTBlankType struct{}
+
+var PTBlank Expression = PTBlankType{}
+
+func (_ PTBlankType) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+	return PTBlank, env, ""
+}
+
+func (_ PTBlankType) String() string {
+	return ""
+}
+
+func (_ PTBlankType) IsLiteral() bool {
+	return true
+}

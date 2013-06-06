@@ -32,7 +32,7 @@ func coreDefine(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err 
 		env.Dict[string(sym)] = evalExp
 	}
 
-	return nil, nil, ""
+	return PTBlank, nil, ""
 }
 
 func coreIf(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {

@@ -121,7 +121,7 @@ func parseElement(scanner *Scanner, literal bool, inQuotedList bool, topLevel bo
 		return
 	default:
 		if literal {
-			return "'" + token, nil
+			return QuotedSymbol(token), nil
 		}
 		return Atomize(token), nil
 	}
