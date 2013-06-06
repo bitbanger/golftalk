@@ -150,3 +150,10 @@ func (l *SexpPair) String() (ret string) {
 	}
 	return ret + ")"
 }
+
+func (l *SexpPair) IsLiteral() bool {
+	if l == EmptyList {
+		return true
+	}
+	return l.literal
+}

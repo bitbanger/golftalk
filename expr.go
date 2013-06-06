@@ -7,6 +7,7 @@ import (
 type Expression interface {
 	Eval(env *Env) (result interface{}, nextEnv *Env, err string)
 	String() string
+	IsLiteral() bool
 }
 
 type Symbol string
@@ -25,4 +26,8 @@ func (s Symbol) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
 
 func (s Symbol) String() string {
 	return string(s)
+}
+
+func (s Symbol) IsLiteral() bool {
+	return false
 }

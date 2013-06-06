@@ -105,14 +105,13 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 
 	for {
 		sexp := val
-
-		// Is the sexp a literal list?
-		if lst, ok := sexp.(*SexpPair); ok && (lst == EmptyList || lst.literal) {
-			return lst, ""
-		}
-
 		//Is the sexp an evaluable expression?
 		if expr, ok := sexp.(Expression); ok {
+			if expr.IsLiteral() {
+				//Don't bother evaluating it
+				return expr, ""
+			}
+
 			result, nextEnv, err := expr.Eval(env)
 			if err != "" {
 				return result, err
