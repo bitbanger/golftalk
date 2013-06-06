@@ -25,8 +25,8 @@ func coreDefine(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err 
 
 	// If we're binding a function to this name, make sure the function literal knows what it's called.
 	// This is just to conform with Racket's function display technique. It's not used in the actual execution of the function!
-	if proc, wasProc := evalExp.(Proc); wasProc {
-		proc.Name = string(sym)
+	if proc, wasProc := evalExp.(Procedure); wasProc {
+		proc.GiveName(string(sym))
 		env.Dict[string(sym)] = proc
 	} else {
 		env.Dict[string(sym)] = evalExp
@@ -77,7 +77,7 @@ func coreLambda(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err 
 		lambVars[i] = lambVar
 	}
 
-	return Proc{"", lambVars, exp, env}, env, ""
+	return &Proc{"", lambVars, exp, env}, env, ""
 }
 
 func coreQuote(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
@@ -102,21 +102,18 @@ func coreApply(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err s
 	args, _ := lst.next.(*SexpPair)
 
 	evalFunc, _ := Eval(Get(args, 0), env)
-	proc, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
-	evalList, _ := Eval(Get(args, 1), env)
-	args, wasList := evalList.(*SexpPair)
-
+	proc, wasFunc := evalFunc.(Procedure)
 	if !wasFunc {
 		return nil, nil, "Function given to apply doesn't evaluate as a function."
 	}
 
+	evalList, _ := Eval(Get(args, 1), env)
+	args, wasList := evalList.(*SexpPair)
 	if !wasList {
 		return nil, nil, "List given to apply doesn't evaluate as a list."
 	}
 
-	argArr := ToSlice(args)
-	result, err = proc(argArr...)
-	return result, env, err
+	return proc.Apply(args, env)
 }
 
 func coreLet(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {

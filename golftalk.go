@@ -19,13 +19,6 @@ type Env struct {
 	Outer *Env
 }
 
-type Proc struct {
-	Name    string
-	Vars    []Symbol
-	Exp     interface{}
-	EvalEnv *Env
-}
-
 // Find returns the closest parent scope with an extant mapping between a given symbol and any value.
 func (e *Env) Find(val string) *Env {
 	if e.Dict[val] != nil {
@@ -95,15 +88,8 @@ func SexpToString(sexp interface{}) string {
 	case string:
 		return sexp
 
-	case Proc:
-		if sexp.Name != "" {
-			return fmt.Sprintf("#<procedure:%s>", sexp.Name)
-		}
-
-		return "#<procedure>"
-
-	// TODO: Make core functions and non-lambda builtins display names as well, somehow.
-
+	case Procedure:
+		return sexp.String()
 	case *SexpPair:
 		return sexp.String()
 	case Symbol:
@@ -151,49 +137,21 @@ func InitGlobalEnv(globalEnv *Env) {
 	globalEnv.Dict["pi"] = 3.141592653589793
 	globalEnv.Dict["euler"] = 2.718281828459045
 
-	globalEnv.Dict["+"] = add
-	globalEnv.Dict["-"] = subtract
-	globalEnv.Dict["*"] = multiply
-	globalEnv.Dict["/"] = divide
-	globalEnv.Dict["%"] = mod
-	globalEnv.Dict["sqrt"] = sqrt
-
-	globalEnv.Dict["or"] = or
-	globalEnv.Dict["and"] = and
-	globalEnv.Dict["not"] = not
-
-	globalEnv.Dict["eq?"] = equals
-	globalEnv.Dict["most-probably?"] = mostProbably
-	globalEnv.Dict["empty?"] = isEmpty
-
-	globalEnv.Dict["one-less-car"] = car
-	if USE_SCHEME_NAMES {
-		globalEnv.Dict["car"] = car
-	}
-	globalEnv.Dict["come-from-behind"] = comeFromBehind
-	if USE_SCHEME_NAMES {
-		globalEnv.Dict["cdr"] = comeFromBehind
-	}
-	globalEnv.Dict["cons"] = cons
-	globalEnv.Dict["you-folks"] = youFolks
-	if USE_SCHEME_NAMES {
-		globalEnv.Dict["list"] = youFolks
+	//insert library functions written in go
+	for name, ptr := range goLibraryProcs {
+		globalEnv.Dict[name] = &GoProc{name, ptr}
 	}
 
-	globalEnv.Dict["<"] = lessThan
-
-	for key, val := range globalEnv.Dict {
-		globalEnv.Dict[key], _ = Eval(val, globalEnv)
-	}
-
-	globalEnv.Dict["readln"] = readLine
-
+	//insert library functions written in proftalk
 	libraryExprs, _ := ParseLine(libraryCode)
 	for _, expr := range libraryExprs {
 		Eval(expr, globalEnv)
 	}
+
 	if USE_SCHEME_NAMES {
-		globalEnv.Dict["fact"] = globalEnv.Dict["in-fact"]
+		for name, mapping := range alternateNames {
+			globalEnv.Dict[name], _ = Eval(Symbol(mapping), globalEnv)
+		}
 	}
 }
 
