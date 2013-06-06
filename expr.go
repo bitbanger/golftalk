@@ -31,3 +31,20 @@ func (s Symbol) String() string {
 func (s Symbol) IsLiteral() bool {
 	return false
 }
+
+type PTInt int
+
+//PTInt should implement Expression
+var _ Expression = PTInt(0)
+
+func (i PTInt) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+	return i, env, ""
+}
+
+func (i PTInt) String() string {
+	return fmt.Sprintf("%d", i)
+}
+
+func (_ PTInt) IsLiteral() bool {
+	return true
+}

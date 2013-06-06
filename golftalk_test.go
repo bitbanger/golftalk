@@ -27,12 +27,12 @@ func evalExpectInt(t *testing.T, expr string, expect int, env *Env) {
 		t.Error(expr, "gives nil want an int")
 		return
 	}
-	i, typeOk := x.(int)
+	i, typeOk := x.(PTInt)
 	if !typeOk {
 		t.Errorf("%s gives %v, want an int\n", expr, x)
 		return
 	}
-	if i != expect {
+	if i != PTInt(expect) {
 		t.Errorf("%s gives %d, want %d\n", expr, i, expect)
 		return
 	}
@@ -253,7 +253,7 @@ func BenchmarkFib(b *testing.B) {
 	env := NewEnv()
 	InitGlobalEnv(env)
 
-	expr := &SexpPair{Symbol("fib"), &SexpPair{int(25), EmptyList, false}, false}
+	expr := &SexpPair{Symbol("fib"), &SexpPair{PTInt(25), EmptyList, false}, false}
 
 	b.ResetTimer()
 	for t := 0; t < b.N; t++ {
@@ -262,7 +262,7 @@ func BenchmarkFib(b *testing.B) {
 			b.Error("fib returned error:", err)
 			continue
 		}
-		i, ok := result.(int)
+		i, ok := result.(PTInt)
 		if !ok {
 			b.Error("fib did not return an int!")
 			continue

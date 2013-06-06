@@ -162,7 +162,7 @@ func ParseLine(line string) (sexps []interface{}, err error) {
 func Atomize(str string) interface{} {
 	// First, try to Atomize it as an integer
 	if i, err := strconv.ParseInt(str, 10, 32); err == nil {
-		return int(i)
+		return PTInt(int(i))
 	}
 
 	// That didn't work? Maybe it's a float

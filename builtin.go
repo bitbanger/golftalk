@@ -9,10 +9,10 @@ import (
 
 func add(args ...interface{}) (interface{}, string) {
 	useFloat := false
-	accumulator := 0
+	accumulator := PTInt(0)
 	fAccumulator := 0.0
 	for _, val := range args {
-		i, wasInt := val.(int)
+		i, wasInt := val.(PTInt)
 		f, wasFloat := val.(float64)
 
 		if wasFloat {
@@ -40,7 +40,7 @@ func subtract(args ...interface{}) (interface{}, string) {
 	case 0:
 		return nil, "Need at least 1 value to subtract."
 	case 1:
-		i, wasInt := args[0].(int)
+		i, wasInt := args[0].(PTInt)
 		f, wasFloat := args[0].(float64)
 
 		if wasInt {
@@ -55,10 +55,10 @@ func subtract(args ...interface{}) (interface{}, string) {
 	}
 
 	useFloat := false
-	accumulator := 0
+	accumulator := PTInt(0)
 	fAccumulator := 0.0
 	for idx, val := range args {
-		i, wasInt := val.(int)
+		i, wasInt := val.(PTInt)
 		f, wasFloat := val.(float64)
 
 		if !wasInt && !wasFloat {
@@ -93,10 +93,10 @@ func subtract(args ...interface{}) (interface{}, string) {
 
 func multiply(args ...interface{}) (interface{}, string) {
 	useFloat := false
-	accumulator := 1
+	accumulator := PTInt(1)
 	fAccumulator := 1.0
 	for _, val := range args {
-		i, wasInt := val.(int)
+		i, wasInt := val.(PTInt)
 		f, wasFloat := val.(float64)
 
 		if wasFloat {
@@ -119,10 +119,10 @@ func multiply(args ...interface{}) (interface{}, string) {
 
 func divide(args ...interface{}) (interface{}, string) {
 	useFloat := false
-	accumulator := 0
+	accumulator := PTInt(0)
 	fAccumulator := 0.0
 	for idx, val := range args {
-		i, wasInt := val.(int)
+		i, wasInt := val.(PTInt)
 		f, wasFloat := val.(float64)
 
 		// Initialize accumulators with the first value
@@ -166,8 +166,8 @@ func divide(args ...interface{}) (interface{}, string) {
 }
 
 func mod(args ...interface{}) (interface{}, string) {
-	a, aok := args[0].(int)
-	b, bok := args[1].(int)
+	a, aok := args[0].(PTInt)
+	b, bok := args[1].(PTInt)
 
 	if !aok || !bok {
 		return nil, "Invalid types to divide. Must be int and int."
@@ -181,7 +181,7 @@ func mod(args ...interface{}) (interface{}, string) {
 }
 
 func sqrt(args ...interface{}) (interface{}, string) {
-	i, wasInt := args[0].(int)
+	i, wasInt := args[0].(PTInt)
 	f, wasFloat := args[0].(float64)
 
 	result := 0.0
@@ -196,7 +196,7 @@ func sqrt(args ...interface{}) (interface{}, string) {
 
 	// Return an int iff we got a perfect square
 	if math.Floor(result) == result {
-		return int(result), ""
+		return PTInt(result), ""
 	}
 
 	return result, ""
@@ -235,10 +235,10 @@ func not(args ...interface{}) (interface{}, string) {
 }
 
 func mostProbably(args ...interface{}) (interface{}, string) {
-	i1, wasInt1 := args[0].(int)
+	i1, wasInt1 := args[0].(PTInt)
 	f1, wasFloat1 := args[0].(float64)
 
-	i2, wasInt2 := args[1].(int)
+	i2, wasInt2 := args[1].(PTInt)
 	f2, wasFloat2 := args[1].(float64)
 
 	if (!wasInt1 && !wasFloat1) || (!wasInt2 && !wasFloat2) {
@@ -295,10 +295,10 @@ func isEmpty(args ...interface{}) (interface{}, string) {
 }
 
 func lessThan(args ...interface{}) (interface{}, string) {
-	i1, wasInt1 := args[0].(int)
+	i1, wasInt1 := args[0].(PTInt)
 	f1, wasFloat1 := args[0].(float64)
 
-	i2, wasInt2 := args[1].(int)
+	i2, wasInt2 := args[1].(PTInt)
 	f2, wasFloat2 := args[1].(float64)
 
 	if (!wasInt1 && !wasFloat1) || (!wasInt2 && !wasFloat2) {
