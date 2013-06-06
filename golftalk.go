@@ -88,11 +88,8 @@ func SexpToString(sexp interface{}) string {
 	case string:
 		return sexp
 
-	case Procedure:
-		return sexp.String()
-	case *SexpPair:
-		return sexp.String()
-	case Symbol:
+	//handles Procedure, *SexpPair, and Symbol
+	case fmt.Stringer:
 		return sexp.String()
 	}
 	return ""
