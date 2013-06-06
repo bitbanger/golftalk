@@ -5,7 +5,7 @@ import (
 )
 
 type Expression interface {
-	Eval(env *Env) (result interface{}, nextEnv *Env, err string)
+	Eval(env *Env) (result Expression, nextEnv *Env, err string)
 	String() string
 	IsLiteral() bool
 }
@@ -15,7 +15,7 @@ type Symbol string
 //Symbol should implement Expression
 var _ Expression = Symbol("")
 
-func (s Symbol) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+func (s Symbol) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
 	lookupEnv := env.Find(string(s))
 	if lookupEnv != nil {
 		return lookupEnv.Dict[string(s)], env, ""
@@ -37,7 +37,7 @@ type PTInt int
 //PTInt should implement Expression
 var _ Expression = PTInt(0)
 
-func (i PTInt) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+func (i PTInt) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
 	return i, env, ""
 }
 
@@ -54,7 +54,7 @@ type PTFloat float64
 //PTFloat should implement Expression
 var _ Expression = PTFloat(0.0)
 
-func (f PTFloat) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+func (f PTFloat) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
 	return f, env, ""
 }
 
@@ -71,7 +71,7 @@ type PTBool bool
 //PTBool should implement Expression
 var _ Expression = PTBool(false)
 
-func (b PTBool) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+func (b PTBool) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
 	return b, env, ""
 }
 
@@ -88,7 +88,7 @@ func (_ PTBool) IsLiteral() bool {
 
 type QuotedSymbol string
 
-func (s QuotedSymbol) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+func (s QuotedSymbol) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
 	return s, env, ""
 }
 
@@ -105,7 +105,7 @@ type PTBlankType struct{}
 
 var PTBlank Expression = PTBlankType{}
 
-func (_ PTBlankType) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+func (_ PTBlankType) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
 	return PTBlank, env, ""
 }
 

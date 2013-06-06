@@ -5,9 +5,9 @@ import (
 	"os"
 )
 
-type CoreFunc func(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string)
+type CoreFunc func(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string)
 
-func coreDefine(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
+func coreDefine(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	args, _ := lst.next.(*SexpPair)
 
 	sym, wasSym := Get(args, 0).(Symbol)
@@ -35,7 +35,7 @@ func coreDefine(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err 
 	return PTBlank, nil, ""
 }
 
-func coreIf(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
+func coreIf(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	args, _ := lst.next.(*SexpPair)
 
 	test := Get(args, 0)
@@ -60,7 +60,7 @@ func coreIf(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err stri
 	return alt, env, ""
 }
 
-func coreLambda(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
+func coreLambda(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	args, _ := lst.next.(*SexpPair)
 
 	symbols, symbolsOk := args.val.(*SexpPair)
@@ -80,7 +80,7 @@ func coreLambda(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err 
 	return &Proc{"", lambVars, exp, env}, env, ""
 }
 
-func coreQuote(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
+func coreQuote(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	args, _ := lst.next.(*SexpPair)
 
 	if args == EmptyList {
@@ -98,7 +98,7 @@ func coreQuote(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err s
 	return args.val, env, ""
 }
 
-func coreApply(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
+func coreApply(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	args, _ := lst.next.(*SexpPair)
 
 	evalFunc, _ := Eval(Get(args, 0), env)
@@ -116,7 +116,7 @@ func coreApply(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err s
 	return proc.Apply(args, env)
 }
 
-func coreLet(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
+func coreLet(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	args, _ := lst.next.(*SexpPair)
 
 	if length, _ := args.Len(); length != 2 {
@@ -134,7 +134,7 @@ func coreLet(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err str
 
 	// Set up parallel slices for binding
 	var symbols []string
-	var values []interface{}
+	var values []Expression
 
 	// Initialize the let environment first to allow lookups within itself
 	letEnv := NewEnv()
@@ -187,7 +187,7 @@ func coreLet(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err str
 	return expression, letEnv, ""
 }
 
-func coreCond(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
+func coreCond(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	args, _ := lst.next.(*SexpPair)
 
 	if length, _ := args.Len(); length == 0 {
@@ -230,10 +230,10 @@ func coreCond(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err st
 	return nil, nil, "At least one test given to cond must pass."
 }
 
-func coreBegin(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
+func coreBegin(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	args, _ := lst.next.(*SexpPair)
 
-	var res interface{} = nil
+	var res Expression = nil
 	err = ""
 	numArgs, _ := args.Len()
 
@@ -248,7 +248,7 @@ func coreBegin(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err s
 	return res, env, err
 }
 
-func haveANiceDay(lst *SexpPair, env *Env) (result interface{}, nextEnv *Env, err string) {
+func haveANiceDay(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	fmt.Println("\nhave a nice day ;)")
 	os.Exit(0)
 

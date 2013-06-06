@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func add(args ...interface{}) (interface{}, string) {
+func add(args ...Expression) (Expression, string) {
 	useFloat := false
 	accumulator := PTInt(0)
 	fAccumulator := PTFloat(0.0)
@@ -35,7 +35,7 @@ func add(args ...interface{}) (interface{}, string) {
 	return accumulator, ""
 }
 
-func subtract(args ...interface{}) (interface{}, string) {
+func subtract(args ...Expression) (Expression, string) {
 	switch len(args) {
 	case 0:
 		return nil, "Need at least 1 value to subtract."
@@ -91,7 +91,7 @@ func subtract(args ...interface{}) (interface{}, string) {
 	return accumulator, ""
 }
 
-func multiply(args ...interface{}) (interface{}, string) {
+func multiply(args ...Expression) (Expression, string) {
 	useFloat := false
 	accumulator := PTInt(1)
 	fAccumulator := PTFloat(1.0)
@@ -117,7 +117,7 @@ func multiply(args ...interface{}) (interface{}, string) {
 	return accumulator, ""
 }
 
-func divide(args ...interface{}) (interface{}, string) {
+func divide(args ...Expression) (Expression, string) {
 	useFloat := false
 	accumulator := PTInt(0)
 	fAccumulator := PTFloat(0.0)
@@ -165,7 +165,7 @@ func divide(args ...interface{}) (interface{}, string) {
 	return accumulator, ""
 }
 
-func mod(args ...interface{}) (interface{}, string) {
+func mod(args ...Expression) (Expression, string) {
 	a, aok := args[0].(PTInt)
 	b, bok := args[1].(PTInt)
 
@@ -180,7 +180,7 @@ func mod(args ...interface{}) (interface{}, string) {
 	return a % b, ""
 }
 
-func sqrt(args ...interface{}) (interface{}, string) {
+func sqrt(args ...Expression) (Expression, string) {
 	i, wasInt := args[0].(PTInt)
 	f, wasFloat := args[0].(PTFloat)
 
@@ -202,7 +202,7 @@ func sqrt(args ...interface{}) (interface{}, string) {
 	return result, ""
 }
 
-func or(args ...interface{}) (interface{}, string) {
+func or(args ...Expression) (Expression, string) {
 	a, aok := args[0].(PTBool)
 	b, bok := args[1].(PTBool)
 
@@ -213,7 +213,7 @@ func or(args ...interface{}) (interface{}, string) {
 	return a || b, ""
 }
 
-func and(args ...interface{}) (interface{}, string) {
+func and(args ...Expression) (Expression, string) {
 	a, aok := args[0].(PTBool)
 	b, bok := args[1].(PTBool)
 
@@ -224,7 +224,7 @@ func and(args ...interface{}) (interface{}, string) {
 	return a && b, ""
 }
 
-func not(args ...interface{}) (interface{}, string) {
+func not(args ...Expression) (Expression, string) {
 	a, aok := args[0].(PTBool)
 
 	if !aok {
@@ -234,7 +234,7 @@ func not(args ...interface{}) (interface{}, string) {
 	return !a, ""
 }
 
-func mostProbably(args ...interface{}) (interface{}, string) {
+func mostProbably(args ...Expression) (Expression, string) {
 	i1, wasInt1 := args[0].(PTInt)
 	f1, wasFloat1 := args[0].(PTFloat)
 
@@ -266,7 +266,7 @@ func mostProbably(args ...interface{}) (interface{}, string) {
 	return PTBool(false), ""
 }
 
-func readLine(args ...interface{}) (interface{}, string) {
+func readLine(args ...Expression) (Expression, string) {
 	in := bufio.NewReader(os.Stdin)
 	line, err := in.ReadString('\n')
 
@@ -274,14 +274,14 @@ func readLine(args ...interface{}) (interface{}, string) {
 		return nil, err.Error()
 	}
 
-	return line, ""
+	return QuotedSymbol(line), ""
 }
 
-func equals(args ...interface{}) (interface{}, string) {
+func equals(args ...Expression) (Expression, string) {
 	return PTBool(args[0] == args[1]), ""
 }
 
-func isEmpty(args ...interface{}) (interface{}, string) {
+func isEmpty(args ...Expression) (Expression, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
@@ -294,7 +294,7 @@ func isEmpty(args ...interface{}) (interface{}, string) {
 	return PTBool(arg == EmptyList), ""
 }
 
-func lessThan(args ...interface{}) (interface{}, string) {
+func lessThan(args ...Expression) (Expression, string) {
 	i1, wasInt1 := args[0].(PTInt)
 	f1, wasFloat1 := args[0].(PTFloat)
 
@@ -315,7 +315,7 @@ func lessThan(args ...interface{}) (interface{}, string) {
 	return PTBool(f1 < f2), ""
 }
 
-func car(args ...interface{}) (interface{}, string) {
+func car(args ...Expression) (Expression, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
@@ -332,7 +332,7 @@ func car(args ...interface{}) (interface{}, string) {
 	return lst.val, ""
 }
 
-func comeFromBehind(args ...interface{}) (interface{}, string) {
+func comeFromBehind(args ...Expression) (Expression, string) {
 	if len(args) != 1 {
 		return nil, "Invalid arguments. Expecting exactly 1 argument."
 	}
@@ -349,7 +349,7 @@ func comeFromBehind(args ...interface{}) (interface{}, string) {
 	return lst.next, ""
 }
 
-func cons(args ...interface{}) (interface{}, string) {
+func cons(args ...Expression) (Expression, string) {
 	if len(args) != 2 {
 		return nil, "Invalid arguments. Expecting exactly 2 arguments."
 	}
@@ -365,7 +365,7 @@ func cons(args ...interface{}) (interface{}, string) {
 	return retVal, ""
 }
 
-func youFolks(args ...interface{}) (interface{}, string) {
+func youFolks(args ...Expression) (Expression, string) {
 	var head *SexpPair = EmptyList
 
 	for i := len(args) - 1; i >= 0; i-- {

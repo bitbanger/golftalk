@@ -94,7 +94,7 @@ func (e ParseError) Error() string {
 	return fmt.Sprintf("parse error: pos %d: %s", e.pos, e.reason)
 }
 
-func parseElement(scanner *Scanner, literal bool, inQuotedList bool, topLevel bool) (result interface{}, err error) {
+func parseElement(scanner *Scanner, literal bool, inQuotedList bool, topLevel bool) (result Expression, err error) {
 	token, pos, err := scanner.Scan()
 	if err == io.EOF && !topLevel {
 		return nil, ParseError{pos, "expecting \")\""}
@@ -105,9 +105,9 @@ func parseElement(scanner *Scanner, literal bool, inQuotedList bool, topLevel bo
 	switch token {
 	case ")":
 		if topLevel {
-			return token, ParseError{pos, "unexpected \")\""}
+			return PTBlank, ParseError{pos, "unexpected \")\""}
 		}
-		return token, nil
+		return Symbol(")"), nil
 	case "(":
 		return parseList(scanner, literal || inQuotedList, false)
 	case "'":
@@ -128,9 +128,9 @@ func parseElement(scanner *Scanner, literal bool, inQuotedList bool, topLevel bo
 }
 
 func parseList(scanner *Scanner, quoted bool, topLevel bool) (list *SexpPair, err error) {
-	dummy := &SexpPair{"dummy", EmptyList, quoted}
+	dummy := &SexpPair{PTBlank, EmptyList, quoted}
 	tail := dummy
-	for element, err := parseElement(scanner, false, quoted, topLevel); element != ")"; element, err = parseElement(scanner, false, quoted, topLevel) {
+	for element, err := parseElement(scanner, false, quoted, topLevel); element != Symbol(")"); element, err = parseElement(scanner, false, quoted, topLevel) {
 
 		if err == io.EOF && topLevel {
 			return dummy.next.(*SexpPair), nil
@@ -146,20 +146,20 @@ func parseList(scanner *Scanner, quoted bool, topLevel bool) (list *SexpPair, er
 	return dummy.next.(*SexpPair), nil
 }
 
-func Parse(scanner *Scanner) (sexps []interface{}, err error) {
+func Parse(scanner *Scanner) (sexps []Expression, err error) {
 	sexp, err := parseList(scanner, false, true)
 	sexps = ToSlice(sexp)
 	return
 }
 
-func ParseLine(line string) (sexps []interface{}, err error) {
+func ParseLine(line string) (sexps []Expression, err error) {
 	scanner := NewScanner(strings.NewReader(line))
 	return Parse(scanner)
 }
 
 // Atomize infers the data type of a raw string and returns the string converted to this type.
 // If it fails to safely convert the string, it simply returns it as a string again.
-func Atomize(str string) interface{} {
+func Atomize(str string) Expression {
 	// First, try to Atomize it as an integer
 	if i, err := strconv.ParseInt(str, 10, 32); err == nil {
 		return PTInt(int(i))
