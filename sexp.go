@@ -50,6 +50,10 @@ func Get(lst *SexpPair, n int) interface{} {
 
 // ToSlice converts a linked list into a slice.
 func ToSlice(lst *SexpPair) (result []interface{}) {
+	//FIXME: should probably be able to return an error if this errors
+	count, _ := lst.Len()
+	result = make([]interface{}, 0, count)
+
 	ok := true
 	for e := lst; e != EmptyList && ok; e, ok = e.next.(*SexpPair) {
 		result = append(result, e.val)
