@@ -152,24 +152,10 @@ func (lst *SexpPair) Eval(env *Env) (result interface{}, nextEnv *Env, err strin
 	// Check that the evaluated function is of the right type
 	fun, wasFunc := evalFunc.(func(args ...interface{}) (interface{}, string))
 	// Also check if it should be interpreted as a user-generated procedure (for tail-call optimization)
-	proc, wasProc := evalFunc.(Proc)
+	proc, wasProc := evalFunc.(Procedure)
 
 	if wasProc {
-		// Bind params to args in a new environment
-		argSlice := ToSlice(args)
-		var evalErr string
-		for i, _ := range argSlice {
-			argSlice[i], evalErr = Eval(argSlice[i], env)
-
-			if evalErr != "" {
-				return nil, nil, evalErr
-			}
-		}
-
-		newEnv := MakeEnv(proc.Vars, argSlice, proc.EvalEnv)
-
-		// Set the expression to be evaluated
-		return proc.Exp, newEnv, ""
+		return proc.Apply(args, env)
 	} else if wasFunc {
 		result, err = fun(argSlice...)
 		return result, nextEnv, err

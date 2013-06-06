@@ -19,13 +19,6 @@ type Env struct {
 	Outer *Env
 }
 
-type Proc struct {
-	Name    string
-	Vars    []Symbol
-	Exp     interface{}
-	EvalEnv *Env
-}
-
 // Find returns the closest parent scope with an extant mapping between a given symbol and any value.
 func (e *Env) Find(val string) *Env {
 	if e.Dict[val] != nil {
@@ -95,15 +88,8 @@ func SexpToString(sexp interface{}) string {
 	case string:
 		return sexp
 
-	case Proc:
-		if sexp.Name != "" {
-			return fmt.Sprintf("#<procedure:%s>", sexp.Name)
-		}
-
-		return "#<procedure>"
-
-	// TODO: Make core functions and non-lambda builtins display names as well, somehow.
-
+	case Procedure:
+		return sexp.String()
 	case *SexpPair:
 		return sexp.String()
 	case Symbol:
