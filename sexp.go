@@ -6,8 +6,8 @@ import (
 )
 
 type SexpPair struct {
-	val     interface{}
-	next    interface{}
+	val     Expression
+	next    Expression
 	literal bool
 }
 
@@ -28,7 +28,7 @@ func (pair *SexpPair) Len() (length int, err error) {
 	return 1, errors.New("pair does not represent a list")
 }
 
-func toList(items ...interface{}) (head *SexpPair) {
+func toList(items ...Expression) (head *SexpPair) {
 	head = EmptyList
 	for i := len(items) - 1; i >= 0; i-- {
 		// TODO: Figure out if this should create literal lists or not
@@ -38,7 +38,7 @@ func toList(items ...interface{}) (head *SexpPair) {
 }
 
 // Get is a simple utility function to Get the nth item from a linked list.
-func Get(lst *SexpPair, n int) interface{} {
+func Get(lst *SexpPair, n int) Expression {
 	obj := lst
 
 	for i := 0; i < n; i++ {
@@ -49,10 +49,10 @@ func Get(lst *SexpPair, n int) interface{} {
 }
 
 // ToSlice converts a linked list into a slice.
-func ToSlice(lst *SexpPair) (result []interface{}) {
+func ToSlice(lst *SexpPair) (result []Expression) {
 	//FIXME: should probably be able to return an error if this errors
 	count, _ := lst.Len()
-	result = make([]interface{}, 0, count)
+	result = make([]Expression, 0, count)
 
 	ok := true
 	for e := lst; e != EmptyList && ok; e, ok = e.next.(*SexpPair) {
@@ -100,7 +100,7 @@ var coreFuncs = map[Symbol]CoreFunc{
 	"exit": haveANiceDay,
 }
 
-func (lst *SexpPair) Eval(env *Env) (result interface{}, nextEnv *Env, err string) {
+func (lst *SexpPair) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
 	// Is the sexp literal?
 	// If so, just return it.
 	if lst == EmptyList || lst.literal {
@@ -149,4 +149,11 @@ func (l *SexpPair) String() (ret string) {
 		}
 	}
 	return ret + ")"
+}
+
+func (l *SexpPair) IsLiteral() bool {
+	if l == EmptyList {
+		return true
+	}
+	return l.literal
 }

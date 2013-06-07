@@ -15,7 +15,7 @@ var USE_SCHEME_NAMES bool = true
 // Env represents an "environment": a scope's mapping of symbol strings to values.
 // Env also provides the ability to search up a scope chain for a value.
 type Env struct {
-	Dict  map[string]interface{}
+	Dict  map[string]Expression
 	Outer *Env
 }
 
@@ -33,14 +33,14 @@ func (e *Env) Find(val string) *Env {
 // NewEnv returns an initialized environment.
 func NewEnv() *Env {
 	env := &Env{}
-	env.Dict = make(map[string]interface{})
+	env.Dict = make(map[string]Expression)
 	return env
 }
 
 // MakeEnv returns an environment initialized with two parallel symbol-value slices and a parent environment pointer.
-func MakeEnv(keys []Symbol, vals []interface{}, outer *Env) *Env {
+func MakeEnv(keys []Symbol, vals []Expression, outer *Env) *Env {
 	env := &Env{}
-	env.Dict = make(map[string]interface{})
+	env.Dict = make(map[string]Expression)
 
 	for i, key := range keys {
 		env.Dict[string(key)] = vals[i]
@@ -71,62 +71,29 @@ func SplitByRegex(str, regex string) *list.List {
 }
 
 // SexpToString takes a parsed S-expression and returns a string representation, suitable for printing.
-func SexpToString(sexp interface{}) string {
-	switch sexp := sexp.(type) {
-	case int:
-		return fmt.Sprintf("%d", sexp)
-
-	case float64:
-		return fmt.Sprintf("%g", sexp)
-
-	case bool:
-		if sexp {
-			return "#t"
-		}
-		return "#f"
-
-	case string:
-		return sexp
-
-	case Procedure:
-		return sexp.String()
-	case *SexpPair:
-		return sexp.String()
-	case Symbol:
-		return sexp.String()
-	}
-	return ""
+func SexpToString(sexp Expression) string {
+	return sexp.String()
 }
 
 // Eval takes an S-expression and an environment, and returns the most simplified equivalent S-expression.
 // Possible ways to simplify an S-expression include returning a literal value if the input was simply that literal value, looking up a symbol in the given environment (and its implied scope chain), and interpreting the S-expression as a function invocation.
 // In the lattermost of evaluation strategies, the function may be provided as a literal or as a symbol referring to a function in the given scope chain; in other words, the first argument has Eval recursively applied to it and must yield a function.
 // If an error occurs at any point in the evaluation, Eval returns an error string, and the returned value should be disregarded.
-func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
-	val := inVal
+func Eval(inVal Expression, inEnv *Env) (Expression, string) {
+	expr := inVal
 	env := inEnv
 
 	for {
-		sexp := val
-
-		// Is the sexp a literal list?
-		if lst, ok := sexp.(*SexpPair); ok && (lst == EmptyList || lst.literal) {
-			return lst, ""
+		if expr.IsLiteral() {
+			//Don't bother evaluating it
+			return expr, ""
 		}
 
-		//Is the sexp an evaluable expression?
-		if expr, ok := sexp.(Expression); ok {
-			result, nextEnv, err := expr.Eval(env)
-			if err != "" {
-				return result, err
-			}
-			val, env = result, nextEnv
-			continue
+		result, nextEnv, err := expr.Eval(env)
+		if err != "" {
+			return result, err
 		}
-
-		// No other choices left; the sexp must be a literal.
-		// Let's just return it!
-		return sexp, ""
+		expr, env = result, nextEnv
 	}
 
 	return nil, "Eval is seriously broken."
@@ -134,8 +101,8 @@ func Eval(inVal interface{}, inEnv *Env) (interface{}, string) {
 
 // InitGlobalEnv initializes the hierarchichal "root" environment with a few built-in functions and constants.
 func InitGlobalEnv(globalEnv *Env) {
-	globalEnv.Dict["pi"] = 3.141592653589793
-	globalEnv.Dict["euler"] = 2.718281828459045
+	globalEnv.Dict["pi"] = PTFloat(3.141592653589793)
+	globalEnv.Dict["euler"] = PTFloat(2.718281828459045)
 
 	//insert library functions written in go
 	for name, ptr := range goLibraryProcs {
