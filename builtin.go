@@ -397,9 +397,9 @@ var goLibraryProcs map[string]goProcPtr = map[string]goProcPtr{
 }
 
 var alternateNames map[string]string = map[string]string{
-	"car":  "car",
-	"cdr":  "comeFromBehind",
-	"list": "youFolks",
+	"car":  "one-less-car",
+	"cdr":  "come-from-behind",
+	"list": "you-olks",
 	"fact": "in-fact",
 }
 
