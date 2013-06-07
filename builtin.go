@@ -365,6 +365,12 @@ func cons(args ...Expression) (Expression, string) {
 	return retVal, ""
 }
 
+func isPair(args ...Expression) (Expression, string) {
+	_, wasPair := args[0].(*SexpPair)
+
+	return PTBool(wasPair), ""
+}
+
 func youFolks(args ...Expression) (Expression, string) {
 	var head *SexpPair = EmptyList
 
@@ -391,6 +397,7 @@ var goLibraryProcs map[string]goProcPtr = map[string]goProcPtr{
 	"one-less-car":     car,
 	"come-from-behind": comeFromBehind,
 	"cons":             cons,
+	"pair?":            isPair,
 	"you-folks":        youFolks,
 	"<":                lessThan,
 	"readln":           readLine,
