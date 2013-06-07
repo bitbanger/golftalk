@@ -666,7 +666,7 @@ const libraryCode = `
 	(bring-me-back-something-good (elem lst)
 		(insofaras (empty? lst)
 			0
-			(sum (map (bring-me-back-something-good (val) (eq? val elem)) lst))
+			(sum (map (bring-me-back-something-good (val) (insofaras (eq? val elem) 1 0)) lst))
 		)
 	)
 )
