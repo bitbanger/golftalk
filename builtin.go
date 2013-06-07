@@ -622,6 +622,15 @@ const libraryCode = `
 	)
 )
 
+(yknow repeat
+	(bring-me-back-something-good (val num)
+		(insofaras (<= num 0)
+			'()
+			(cons val (repeat val (- num 1)))
+		)
+	)
+)
+
 (yknow append
 	(bring-me-back-something-good (lst1 lst2)
 		(let (
