@@ -6,26 +6,25 @@ import (
 
 type Procedure interface {
 	//Runs the procedure with the given arguments
-	Apply(args *SexpPair, env *Env) (result interface{}, newEnv *Env, err string)
+	Apply(args *SexpPair, env *Env) (result Expression, newEnv *Env, err string)
 
 	//Sets the name of the Procedure if it doesn't have one already
 	GiveName(name string)
 
-	//returns a string representation of the function
-	String() string
+	Expression
 }
 
 //TODO: decide if this should be called PTProc or something
 type Proc struct {
 	Name    string
 	Vars    []Symbol
-	Exp     interface{}
+	Exp     Expression
 	EvalEnv *Env
 }
 
 var _ Procedure = &Proc{}
 
-func (p *Proc) Apply(args *SexpPair, env *Env) (result interface{}, newEnv *Env, err string) {
+func (p *Proc) Apply(args *SexpPair, env *Env) (result Expression, newEnv *Env, err string) {
 	argSlice, err := evalArgs(args, env)
 	if err != "" {
 		return nil, nil, err
@@ -51,14 +50,22 @@ func (p *Proc) String() string {
 	return "#<procedure>"
 }
 
-type goProcPtr func(args ...interface{}) (interface{}, string)
+func (p *Proc) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
+	return p, env, ""
+}
+
+func (_ *Proc) IsLiteral() bool {
+	return true
+}
+
+type goProcPtr func(args ...Expression) (Expression, string)
 
 type GoProc struct {
 	Name    string
 	funcPtr goProcPtr
 }
 
-func (g *GoProc) Apply(args *SexpPair, env *Env) (result interface{}, newEnv *Env, err string) {
+func (g *GoProc) Apply(args *SexpPair, env *Env) (result Expression, newEnv *Env, err string) {
 	newEnv = env
 	argSlice, err := evalArgs(args, env)
 	if err != "" {
@@ -82,7 +89,15 @@ func (g *GoProc) String() string {
 	return "#<procedure>"
 }
 
-func evalArgs(args *SexpPair, env *Env) (argSlice []interface{}, err string) {
+func (g *GoProc) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
+	return g, env, ""
+}
+
+func (_ *GoProc) IsLiteral() bool {
+	return true
+}
+
+func evalArgs(args *SexpPair, env *Env) (argSlice []Expression, err string) {
 	argSlice = ToSlice(args)
 	var evalErr string
 	for i, _ := range argSlice {
