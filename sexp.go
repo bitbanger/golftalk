@@ -76,6 +76,8 @@ func SetIsLiteral(lst *SexpPair, l bool) {
 }
 
 var coreFuncs = map[Symbol]CoreFunc{
+	"call/cc": coreCallCC,
+	
 	"yknow":  coreDefine,
 	"define": coreDefine,
 
