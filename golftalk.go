@@ -15,35 +15,38 @@ var USE_SCHEME_NAMES bool = true
 // Env represents an "environment": a scope's mapping of symbol strings to values.
 // Env also provides the ability to search up a scope chain for a value.
 type Env struct {
-	Dict  map[string]Expression
+	Dict  map[Symbol]Expression
 	Outer *Env
 }
 
-// Find returns the closest parent scope with an extant mapping between a given symbol and any value.
-func (e *Env) Find(val string) *Env {
-	if e.Dict[val] != nil {
-		return e
-	} else if e.Outer != nil {
-		return e.Outer.Find(val)
-	}
+type SymbolNotFoundError Symbol
 
-	return nil
+func (s SymbolNotFoundError) Error() string {
+	return fmt.Sprintf("'%s' not found in scope chain.", Symbol(s))
+}
+func (e *Env) Get(val Symbol) (result Expression, err error) {
+	for tmpEnv := e; tmpEnv != nil; tmpEnv = tmpEnv.Outer {
+		if result, ok := tmpEnv.Dict[val]; ok {
+			return result, nil
+		}
+	}
+	return nil, SymbolNotFoundError(val)
 }
 
 // NewEnv returns an initialized environment.
 func NewEnv() *Env {
 	env := &Env{}
-	env.Dict = make(map[string]Expression)
+	env.Dict = make(map[Symbol]Expression)
 	return env
 }
 
 // MakeEnv returns an environment initialized with two parallel symbol-value slices and a parent environment pointer.
 func MakeEnv(keys []Symbol, vals []Expression, outer *Env) *Env {
 	env := &Env{}
-	env.Dict = make(map[string]Expression)
+	env.Dict = make(map[Symbol]Expression)
 
 	for i, key := range keys {
-		env.Dict[string(key)] = vals[i]
+		env.Dict[key] = vals[i]
 	}
 
 	env.Outer = outer
@@ -106,7 +109,7 @@ func InitGlobalEnv(globalEnv *Env) {
 
 	//insert library functions written in go
 	for name, ptr := range goLibraryProcs {
-		globalEnv.Dict[name] = &GoProc{name, ptr}
+		globalEnv.Dict[Symbol(name)] = &GoProc{name, ptr}
 	}
 
 	//insert library functions written in proftalk
@@ -117,7 +120,7 @@ func InitGlobalEnv(globalEnv *Env) {
 
 	if USE_SCHEME_NAMES {
 		for name, mapping := range alternateNames {
-			globalEnv.Dict[name], _ = Eval(Symbol(mapping), globalEnv)
+			globalEnv.Dict[Symbol(name)], _ = Eval(Symbol(mapping), globalEnv)
 		}
 	}
 }

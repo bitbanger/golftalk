@@ -16,12 +16,11 @@ type Symbol string
 var _ Expression = Symbol("")
 
 func (s Symbol) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
-	lookupEnv := env.Find(string(s))
-	if lookupEnv != nil {
-		return lookupEnv.Dict[string(s)], env, ""
-	} else {
-		return nil, nil, fmt.Sprintf("'%s' not found in scope chain.", s)
+	lookup, lookupErr := env.Get(s)
+	if lookupErr != nil {
+		return nil, nil, lookupErr.Error()
 	}
+	return lookup, env, ""
 }
 
 func (s Symbol) String() string {
