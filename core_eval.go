@@ -55,9 +55,9 @@ func coreDefine(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err s
 	// This is just to conform with Racket's function display technique. It's not used in the actual execution of the function!
 	if proc, wasProc := evalExp.(Procedure); wasProc {
 		proc.GiveName(string(sym))
-		env.Dict[string(sym)] = proc
+		env.Dict[sym] = proc
 	} else {
-		env.Dict[string(sym)] = evalExp
+		env.Dict[sym] = evalExp
 	}
 
 	return PTBlank, nil, ""
@@ -161,7 +161,7 @@ func coreLet(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err stri
 	expression := Get(args, 1)
 
 	// Set up parallel slices for binding
-	var symbols []string
+	var symbols []Symbol
 	var values []Expression
 
 	// Initialize the let environment first to allow lookups within itself
@@ -190,7 +190,7 @@ func coreLet(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err stri
 		if !symOk || symbol == "" {
 			return nil, nil, fmt.Sprintf("Binding #%d has a non-string, empty string, or string literal symbol.", bindNum)
 		}
-		symbols = append(symbols, string(symbol))
+		symbols = append(symbols, symbol)
 
 		// Evaluate the binding value before it's bound
 		// Allow evaluation error to propagate outward, as usual
