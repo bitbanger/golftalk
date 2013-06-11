@@ -19,15 +19,18 @@ type Env struct {
 	Outer *Env
 }
 
-// Find returns the closest parent scope with an extant mapping between a given symbol and any value.
-func (e *Env) Find(val string) *Env {
-	if e.Dict[val] != nil {
-		return e
-	} else if e.Outer != nil {
-		return e.Outer.Find(val)
-	}
+type SymbolNotFoundError Symbol
 
-	return nil
+func (s SymbolNotFoundError) Error() string {
+	return fmt.Sprintf("'%s' not found in scope chain.", Symbol(s))
+}
+func (e *Env) Get(val Symbol) (result Expression, err error) {
+	for tmpEnv := e; tmpEnv != nil; tmpEnv = tmpEnv.Outer {
+		if result, ok := tmpEnv.Dict[string(val)]; ok {
+			return result, nil
+		}
+	}
+	return nil, SymbolNotFoundError(val)
 }
 
 // NewEnv returns an initialized environment.
