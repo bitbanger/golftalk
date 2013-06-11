@@ -9,29 +9,29 @@ type CoreFunc func(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, er
 
 func coreCallCC(lst *SexpPair, env *Env) (result Expression, nextEnv *Env, err string) {
 	args, _ := lst.next.(*SexpPair)
-	
+
 	arg := Get(args, 0)
 	evalArg, evalErr := Eval(arg, env)
-	
+
 	if evalErr != "" {
 		return nil, nil, evalErr
 	}
-	
+
 	proc, wasProc := evalArg.(Procedure)
-	
+
 	if !wasProc {
 		return nil, nil, "Argument to call/cc must be a procedure."
 	}
-	
+
 	var throw goProcPtr = func(args ...Expression) (Expression, string) {
 		fmt.Println("NON-LOCAL CONTROL FLOW FTW!")
-		
+
 		return nil, ""
 	}
-	
+
 	throwProc := &GoProc{"throw", throw}
 	throwPair := &SexpPair{throwProc, EmptyList, false}
-	
+
 	return proc.Apply(throwPair, env)
 }
 
