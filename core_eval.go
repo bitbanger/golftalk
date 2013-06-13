@@ -273,7 +273,8 @@ func coreCond(frame *StackFrame, _ *Stack) (result Expression, nextEnv *Env, don
 		}
 
 		// Done with last step's condition, on to the next
-		args, argsOk := args.next.(*SexpPair)
+		var argsOk bool
+		args, argsOk = args.next.(*SexpPair)
 		frame.Args = args
 		if !argsOk {
 			return nil, nil, true, "cond: argument list not a list"
