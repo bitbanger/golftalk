@@ -86,7 +86,7 @@ func SexpToString(sexp Expression) string {
 // Possible ways to simplify an S-expression include returning a literal value if the input was simply that literal value, looking up a symbol in the given environment (and its implied scope chain), and interpreting the S-expression as a function invocation.
 // In the lattermost of evaluation strategies, the function may be provided as a literal or as a symbol referring to a function in the given scope chain; in other words, the first argument has Eval recursively applied to it and must yield a function.
 // If an error occurs at any point in the evaluation, Eval returns an error string, and the returned value should be disregarded.
-func Eval2(inVal Expression, inEnv *Env) (Expression, string) {
+func Eval(inVal Expression, inEnv *Env) (Expression, string) {
 	expr := inVal
 	env := inEnv
 
@@ -134,7 +134,7 @@ func InitGlobalEnv(globalEnv *Env) {
 	//insert library functions written in proftalk
 	libraryExprs, _ := ParseLine(libraryCode)
 	for _, expr := range libraryExprs {
-		_, err := Eval2(expr, globalEnv)
+		_, err := Eval(expr, globalEnv)
 		if err != "" {
 			panic(errors.New(fmt.Sprintf("error in library expression: '%s'\nExpression:\n%s", err, SexpToString(expr))))
 		}
@@ -142,7 +142,7 @@ func InitGlobalEnv(globalEnv *Env) {
 
 	if USE_SCHEME_NAMES {
 		for name, mapping := range alternateNames {
-			globalEnv.Dict[Symbol(name)], _ = Eval2(Symbol(mapping), globalEnv)
+			globalEnv.Dict[Symbol(name)], _ = Eval(Symbol(mapping), globalEnv)
 		}
 	}
 }
@@ -175,7 +175,7 @@ func main() {
 			}
 
 			for _, sexp := range sexps {
-				result, evalErr := Eval2(sexp, globalEnv)
+				result, evalErr := Eval(sexp, globalEnv)
 
 				if evalErr != "" {
 					fmt.Printf("No.\n\t%s\n", evalErr)
