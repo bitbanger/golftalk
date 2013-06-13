@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"container/list"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -125,15 +126,18 @@ func InitGlobalEnv(globalEnv *Env) {
 		globalEnv.Dict[Symbol(name)] = &GoProc{name, ptr}
 	}
 
-	//insert library functions written in proftalk
-	libraryExprs, _ := ParseLine(libraryCode)
-	for _, expr := range libraryExprs {
-		Eval2(expr, globalEnv)
-	}
-
 	//insert core functions defined in core_func.go
 	for name, ptr := range coreFuncs {
 		globalEnv.Dict[name] = ptr
+	}
+
+	//insert library functions written in proftalk
+	libraryExprs, _ := ParseLine(libraryCode)
+	for _, expr := range libraryExprs {
+		_, err := Eval2(expr, globalEnv)
+		if err != "" {
+			panic(errors.New(fmt.Sprintf("error in library expression: '%s'\nExpression:\n%s", err, SexpToString(expr))))
+		}
 	}
 
 	if USE_SCHEME_NAMES {
