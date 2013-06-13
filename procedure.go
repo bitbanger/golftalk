@@ -50,7 +50,7 @@ func (p *Proc) String() string {
 	return "#<procedure>"
 }
 
-func (p *Proc) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
+func (p *Proc) Eval(_ *Stack, env *Env) (result Expression, nextEnv *Env, err string) {
 	return p, env, ""
 }
 
@@ -89,7 +89,7 @@ func (g *GoProc) String() string {
 	return "#<procedure>"
 }
 
-func (g *GoProc) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
+func (g *GoProc) Eval(_ *Stack, env *Env) (result Expression, nextEnv *Env, err string) {
 	return g, env, ""
 }
 
@@ -108,4 +108,26 @@ func evalArgs(args *SexpPair, env *Env) (argSlice []Expression, err string) {
 		}
 	}
 	return
+}
+
+func (g CoreFunc) Apply(args *SexpPair, env *Env) (result Expression, newEnv *Env, err string) {
+	//FIXME:implement
+	return
+}
+
+func (g CoreFunc) GiveName(name string) {
+	//dont care
+	return
+}
+
+func (g CoreFunc) String() string {
+	return "#<core procedure>"
+}
+
+func (g CoreFunc) Eval(_ *Stack, env *Env) (result Expression, nextEnv *Env, err string) {
+	return g, env, ""
+}
+
+func (_ CoreFunc) IsLiteral() bool {
+	return true
 }

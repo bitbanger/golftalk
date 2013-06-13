@@ -102,7 +102,7 @@ var coreFuncs = map[Symbol]CoreFunc{
 	"exit": haveANiceDay,
 }
 
-func (lst *SexpPair) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
+func (lst *SexpPair) Eval(stack *Stack, env *Env) (result Expression, nextEnv *Env, err string) {
 	// Is the sexp literal?
 	// If so, just return it.
 	if lst == EmptyList || lst.literal {
@@ -115,12 +115,17 @@ func (lst *SexpPair) Eval(env *Env) (result Expression, nextEnv *Env, err string
 		return nil, nil, "Function has invalid argument list."
 	}
 
-	// If sym is not a symbol, s wil be "", which will fall to default correctly
 	sym, _ := lst.val.(Symbol)
 
 	// Check all "core functions" first (if, lambda, let, etc.)
 	if coreFunc, wasCore := coreFuncs[sym]; wasCore {
-		return coreFunc(lst, env)
+		stack.Push(coreFunc, args, env)
+		var done bool
+		result, nextEnv, done, err = coreFunc(&((*stack)[len(*stack)]), stack)
+		if done {
+			stack.Pop()
+		}
+		return
 	}
 
 	// If it wasn't a core function, evaluate the first element of the list as a function to apply to the rest of the list
