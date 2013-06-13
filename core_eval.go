@@ -106,7 +106,7 @@ func coreLambda(frame *StackFrame, _ *Stack) (result Expression, nextEnv *Env, d
 		return nil, nil, true, "Symbol list to bind within lambda wasn't a list."
 	}
 
-	exp := Get(args, 2)
+	exp := Get(args, 1)
 
 	lambVars := make([]Symbol, numSymbols)
 	for i := range lambVars {
