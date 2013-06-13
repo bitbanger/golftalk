@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type StackFrame struct {
 	Running    Procedure
 	Args       *SexpPair
@@ -9,13 +13,23 @@ type StackFrame struct {
 }
 
 func (f *StackFrame) Run(stack *Stack, input Expression) (result Expression, nextEnv *Env, err string) {
+	if f.Step == -1 && f.Running == nil {
+		proc, ok := f.StepInput.(Procedure)
+		if !ok {
+			return nil, nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", SexpToString(f.StepInput))
+		}
+		f.Running = proc
+		f.Step = 0
+	}
 	return f.Running.Run(f, stack)
 }
 
 type Stack []StackFrame
 
-func (s *Stack) Push(proc Procedure, args *SexpPair, env *Env) {
-	*s = Stack(append(*s, StackFrame{proc, args, env, 0, nil}))
+func (s *Stack) Push(args *SexpPair, env *Env) {
+	// Running will be set the next time this stack frame is run, to whatever
+	// is fed to this special step as input (starts at step -1
+	*s = Stack(append(*s, StackFrame{nil, args, env, -1, nil}))
 }
 
 func (s *Stack) Pop() {

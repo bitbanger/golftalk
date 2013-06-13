@@ -146,8 +146,3 @@ func (f CoreFunc) Eval(_ *Stack, env *Env) (result Expression, nextEnv *Env, err
 func (_ CoreFunc) IsLiteral() bool {
 	return true
 }
-
-func Call(proc Procedure, args *SexpPair, env *Env, stack *Stack) (result Expression, nextEnv *Env, err string) {
-	stack.Push(proc, args, env)
-	return proc.Run(&((*stack)[len(*stack)-1]), stack)
-}

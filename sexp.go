@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 )
 
 type SexpPair struct {
@@ -109,31 +108,17 @@ func (lst *SexpPair) Eval(stack *Stack, env *Env) (result Expression, nextEnv *E
 		return lst, env, ""
 	}
 
+	procExpr := lst.val
+
 	// Validate argument list
 	args, argsOk := lst.next.(*SexpPair)
 	if !argsOk {
 		return nil, nil, "Function has invalid argument list."
 	}
 
-	sym, _ := lst.val.(Symbol)
-
-	// evaluate the first element of the list to get a function to apply to the rest of the list
-	// TODO: Argument number checking
-	evalFunc, funcErr := Eval(lst.val, env)
-	if funcErr != "" {
-		return nil, nil, funcErr
-	}
-
-	// Check if it should be interpreted as a procedure
-	proc, wasProc := evalFunc.(Procedure)
-
-	if wasProc {
-		return Call(proc, args, env, stack)
-	} else {
-		return nil, nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", lst.val)
-	}
-
-	panic(errors.New("list failed to evaluate correctly"))
+	stack.Push(args, env)
+	//Evaluate expression to run (will get put in frame.Running in step -1)
+	return procExpr, env, ""
 }
 
 func (l *SexpPair) String() (ret string) {
