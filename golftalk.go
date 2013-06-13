@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"container/list"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -75,6 +76,9 @@ func SplitByRegex(str, regex string) *list.List {
 
 // SexpToString takes a parsed S-expression and returns a string representation, suitable for printing.
 func SexpToString(sexp Expression) string {
+	if sexp == nil {
+		return "<null>"
+	}
 	return sexp.String()
 }
 
@@ -86,17 +90,27 @@ func Eval(inVal Expression, inEnv *Env) (Expression, string) {
 	expr := inVal
 	env := inEnv
 
+	var stack Stack = make([]StackFrame, 0, 10)
+
 	for {
+		var err string
+
 		if expr.IsLiteral() {
 			//Don't bother evaluating it
-			return expr, ""
-		}
 
-		result, nextEnv, err := expr.Eval(env)
-		if err != "" {
-			return result, err
+			if len(stack) == 0 {
+				// Finally done
+				return expr, ""
+			}
+
+			// Not done, hand it back to the top procedure on the stack
+			expr, env, err = (&stack).RunTop(expr)
+		} else {
+			expr, env, err = expr.Eval(&stack, env)
 		}
-		expr, env = result, nextEnv
+		if err != "" {
+			return expr, err
+		}
 	}
 
 	return nil, "Eval is seriously broken."
@@ -112,10 +126,18 @@ func InitGlobalEnv(globalEnv *Env) {
 		globalEnv.Dict[Symbol(name)] = &GoProc{name, ptr}
 	}
 
+	//insert core functions defined in core_func.go
+	for name, ptr := range coreFuncs {
+		globalEnv.Dict[name] = ptr
+	}
+
 	//insert library functions written in proftalk
 	libraryExprs, _ := ParseLine(libraryCode)
 	for _, expr := range libraryExprs {
-		Eval(expr, globalEnv)
+		_, err := Eval(expr, globalEnv)
+		if err != "" {
+			panic(errors.New(fmt.Sprintf("error in library expression: '%s'\nExpression:\n%s", err, SexpToString(expr))))
+		}
 	}
 
 	if USE_SCHEME_NAMES {

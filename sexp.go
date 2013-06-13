@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 )
 
 type SexpPair struct {
@@ -102,12 +101,14 @@ var coreFuncs = map[Symbol]CoreFunc{
 	"exit": haveANiceDay,
 }
 
-func (lst *SexpPair) Eval(env *Env) (result Expression, nextEnv *Env, err string) {
+func (lst *SexpPair) Eval(stack *Stack, env *Env) (result Expression, nextEnv *Env, err string) {
 	// Is the sexp literal?
 	// If so, just return it.
 	if lst == EmptyList || lst.literal {
 		return lst, env, ""
 	}
+
+	procExpr := lst.val
 
 	// Validate argument list
 	args, argsOk := lst.next.(*SexpPair)
@@ -115,31 +116,9 @@ func (lst *SexpPair) Eval(env *Env) (result Expression, nextEnv *Env, err string
 		return nil, nil, "Function has invalid argument list."
 	}
 
-	// If sym is not a symbol, s wil be "", which will fall to default correctly
-	sym, _ := lst.val.(Symbol)
-
-	// Check all "core functions" first (if, lambda, let, etc.)
-	if coreFunc, wasCore := coreFuncs[sym]; wasCore {
-		return coreFunc(lst, env)
-	}
-
-	// If it wasn't a core function, evaluate the first element of the list as a function to apply to the rest of the list
-	// TODO: Argument number checking
-	evalFunc, funcErr := Eval(lst.val, env)
-	if funcErr != "" {
-		return nil, nil, funcErr
-	}
-
-	// Check if it should be interpreted as a procedure
-	proc, wasProc := evalFunc.(Procedure)
-
-	if wasProc {
-		return proc.Apply(args, env)
-	} else {
-		return nil, nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", lst.val)
-	}
-
-	panic(errors.New("list failed to evaluate correctly"))
+	stack.Push(args, env)
+	//Evaluate expression to run (will get put in frame.Running in step -1)
+	return procExpr, env, ""
 }
 
 func (l *SexpPair) String() (ret string) {
