@@ -26,19 +26,39 @@ var _ Procedure = &Proc{}
 
 func (p *Proc) Run(frame *StackFrame, stack *Stack) (result Expression, newEnv *Env, err string) {
 	args, env := frame.Args, frame.CurrentEnv
+	frame.Step++
+	curVar := frame.Step - 1 // Starts at 0
+	if frame.Step == 1 {
+		// Set up a new environment to do bindings in
+		frame.CurrentEnv = NewEnv()
+		frame.CurrentEnv.Outer = env
+		env = frame.CurrentEnv
+	} else {
+		// Bind the last evaluation to the last var
+		env.Dict[p.Vars[curVar-1]] = frame.StepInput
+	}
+	if curVar < len(p.Vars) {
+		//Get next argument to bind
+		bindingExpr := args.val
+		var argsOk bool
+		frame.Args, argsOk = args.next.(*SexpPair)
+		if !argsOk {
+			return nil, nil, "Invalid argument list"
+		}
 
-	argSlice, err := evalArgs(args, env)
-	if err != "" {
-		return nil, nil, err
+		// Evaluate the value of the binding in the outer Env!
+		return bindingExpr, env.Outer, ""
 	}
 
-	newEnv = MakeEnv(p.Vars, argSlice, p.EvalEnv)
+	if args != EmptyList {
+		return nil, nil, "Too many arguments"
+	}
 
 	// Don't need our frame anymore
 	stack.Pop()
 
 	// Set the expression to be evaluated
-	return p.Exp, newEnv, ""
+	return p.Exp, env, ""
 }
 
 func (p *Proc) GiveName(name string) {
@@ -70,20 +90,46 @@ type GoProc struct {
 	funcPtr goProcPtr
 }
 
-func (g *GoProc) Run(frame *StackFrame, stack *Stack) (result Expression, newEnv *Env, err string) {
+func (g *GoProc) Run(frame *StackFrame, stack *Stack) (result Expression, nextEnv *Env, err string) {
 	args, env := frame.Args, frame.CurrentEnv
+	frame.Step++
 
-	newEnv = env
-	argSlice, err := evalArgs(args, env)
-	if err != "" {
-		return nil, nil, err
+	if frame.Step == 1 {
+		//I need a new env for my local variables :(
+		frame.CurrentEnv = NewEnv()
+		frame.CurrentEnv.Outer = env
+		env = frame.CurrentEnv
+	} else {
+		entry := &SexpPair{frame.StepInput, EmptyList, false}
+		if tail, ok := env.Dict["__goproc_run_tail__"]; ok {
+			tail.(*SexpPair).next = entry
+		} else {
+			// If first entry, save it as the head, too
+			env.Dict["__goproc_run_head__"] = entry
+		}
+		env.Dict["__goproc_run_tail__"] = entry
 	}
-	result, err = g.funcPtr(argSlice...)
 
-	// Don't need our frame anymore
+	if args != EmptyList {
+		bindingExpr := args.val
+
+		var argsOk bool
+		frame.Args, argsOk = args.next.(*SexpPair)
+		if !argsOk {
+			return nil, nil, "Invalid argument list"
+		}
+
+		// Evaluate the value of the binding in the outer Env!
+		return bindingExpr, env.Outer, ""
+	}
+
+	// All done, don't need our frame anymore
 	stack.Pop()
 
-	return
+	evaluatedArgs, _ := env.Dict["__goproc_run_head__"].(*SexpPair)
+	argSlice := ToSlice(evaluatedArgs)
+	result, err = g.funcPtr(argSlice...)
+	return result, env.Outer, err
 }
 
 func (g *GoProc) GiveName(name string) {
@@ -106,19 +152,6 @@ func (g *GoProc) Eval(_ *Stack, env *Env) (result Expression, nextEnv *Env, err 
 
 func (_ *GoProc) IsLiteral() bool {
 	return true
-}
-
-func evalArgs(args *SexpPair, env *Env) (argSlice []Expression, err string) {
-	argSlice = ToSlice(args)
-	var evalErr string
-	for i, _ := range argSlice {
-		argSlice[i], evalErr = Eval(argSlice[i], env)
-
-		if evalErr != "" {
-			return nil, evalErr
-		}
-	}
-	return
 }
 
 func (f CoreFunc) Run(frame *StackFrame, stack *Stack) (result Expression, nextEnv *Env, err string) {

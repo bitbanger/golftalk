@@ -18,7 +18,7 @@ func evalExpectInt(t *testing.T, expr string, expect int, env *Env) {
 	}
 
 	//TODO: fix this to do something more sensible than just eval the first one
-	x, err := Eval(sexps[0], env)
+	x, err := Eval2(sexps[0], env)
 	if err != "" {
 		t.Error(expr, "gives error:", err)
 		return
@@ -52,7 +52,7 @@ func evalExpectBool(t *testing.T, expr string, expect bool, env *Env) {
 	}
 
 	//TODO: fix this to do something more sensible than just eval the first one
-	x, err := Eval(sexps[0], env)
+	x, err := Eval2(sexps[0], env)
 	if err != "" {
 		t.Error(expr, "gives error:", err)
 		return
@@ -86,7 +86,7 @@ func evalExpectAsString(t *testing.T, expr string, expect string, env *Env) {
 	}
 
 	//TODO: fix this to do something more sensible than just eval the first one
-	x, err := Eval(sexps[0], env)
+	x, err := Eval2(sexps[0], env)
 	if err != "" {
 		t.Error(expr, "gives error:", err)
 		return
@@ -117,7 +117,7 @@ func evalExpectError(t *testing.T, expr string, expect string, env *Env) {
 	}
 
 	//TODO: fix this to do something more sensible than just eval the first one
-	x, err := Eval(sexps[0], env)
+	x, err := Eval2(sexps[0], env)
 	if err == "" {
 		t.Errorf("%s gives %v, want error: %s\n", expr, x, expect)
 		return
@@ -257,7 +257,7 @@ func BenchmarkFib(b *testing.B) {
 
 	b.ResetTimer()
 	for t := 0; t < b.N; t++ {
-		result, err := Eval(expr, env)
+		result, err := Eval2(expr, env)
 		if err != "" {
 			b.Error("fib returned error:", err)
 			continue

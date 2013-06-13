@@ -75,6 +75,9 @@ func SplitByRegex(str, regex string) *list.List {
 
 // SexpToString takes a parsed S-expression and returns a string representation, suitable for printing.
 func SexpToString(sexp Expression) string {
+	if sexp == nil {
+		return "<null>"
+	}
 	return sexp.String()
 }
 
@@ -102,7 +105,7 @@ func Eval2(inVal Expression, inEnv *Env) (Expression, string) {
 			// Not done, hand it back to the top procedure on the stack
 			expr, env, err = (&stack).RunTop(expr)
 		} else {
-			expr, env, err := expr.Eval(&stack, env)
+			expr, env, err = expr.Eval(&stack, env)
 		}
 		if err != "" {
 			return expr, err

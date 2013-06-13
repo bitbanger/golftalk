@@ -46,10 +46,9 @@ func coreDefine(frame *StackFrame, _ *Stack) (result Expression, nextEnv *Env, d
 
 	switch frame.Step {
 	case 1:
-		sym, wasSym := Get(args, 0).(Symbol)
 		symExp := Get(args, 1)
 
-		if !wasSym {
+		if _, wasSym := Get(args, 0).(Symbol); !wasSym {
 			return nil, nil, true, "Symbol given to define wasn't a symbol."
 		}
 

@@ -14,13 +14,14 @@ type StackFrame struct {
 
 func (f *StackFrame) Run(stack *Stack, input Expression) (result Expression, nextEnv *Env, err string) {
 	if f.Step == -1 && f.Running == nil {
-		proc, ok := f.StepInput.(Procedure)
+		proc, ok := input.(Procedure)
 		if !ok {
 			return nil, nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", SexpToString(f.StepInput))
 		}
 		f.Running = proc
 		f.Step = 0
 	}
+	f.StepInput = input
 	return f.Running.Run(f, stack)
 }
 
