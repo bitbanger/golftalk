@@ -8,6 +8,10 @@ type StackFrame struct {
 	StepInput  Expression
 }
 
+func (f *StackFrame) Run(stack *Stack, input Expression) (result Expression, nextEnv *Env, err string) {
+	return f.Running.Run(f, stack)
+}
+
 type Stack []StackFrame
 
 func (s *Stack) Push(proc Procedure, args *SexpPair, env *Env) {
@@ -20,4 +24,8 @@ func (s *Stack) Pop() {
 
 func (s *Stack) Empty() bool {
 	return len(*s) == 0
+}
+
+func (s *Stack) RunTop(input Expression) (result Expression, nextEnv *Env, err string) {
+	return (&((*s)[len(*s)-1])).Run(s, input)
 }

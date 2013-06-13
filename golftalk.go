@@ -82,21 +82,31 @@ func SexpToString(sexp Expression) string {
 // Possible ways to simplify an S-expression include returning a literal value if the input was simply that literal value, looking up a symbol in the given environment (and its implied scope chain), and interpreting the S-expression as a function invocation.
 // In the lattermost of evaluation strategies, the function may be provided as a literal or as a symbol referring to a function in the given scope chain; in other words, the first argument has Eval recursively applied to it and must yield a function.
 // If an error occurs at any point in the evaluation, Eval returns an error string, and the returned value should be disregarded.
-func Eval(inVal Expression, inEnv *Env) (Expression, string) {
+func Eval2(inVal Expression, inEnv *Env) (Expression, string) {
 	expr := inVal
 	env := inEnv
 
+	var stack Stack = make([]StackFrame, 0, 10)
+
 	for {
+		var err string
+
 		if expr.IsLiteral() {
 			//Don't bother evaluating it
-			return expr, ""
-		}
 
-		result, nextEnv, err := expr.Eval(env)
-		if err != "" {
-			return result, err
+			if len(stack) == 0 {
+				// Finally done
+				return expr, ""
+			}
+
+			// Not done, hand it back to the top procedure on the stack
+			expr, env, err = (&stack).RunTop(expr)
+		} else {
+			expr, env, err := expr.Eval(&stack, env)
 		}
-		expr, env = result, nextEnv
+		if err != "" {
+			return expr, err
+		}
 	}
 
 	return nil, "Eval is seriously broken."
