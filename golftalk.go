@@ -125,7 +125,7 @@ func InitGlobalEnv(globalEnv *Env) {
 	//insert library functions written in proftalk
 	libraryExprs, _ := ParseLine(libraryCode)
 	for _, expr := range libraryExprs {
-		Eval(expr, globalEnv)
+		Eval2(expr, globalEnv)
 	}
 
 	//insert core functions defined in core_func.go
@@ -135,7 +135,7 @@ func InitGlobalEnv(globalEnv *Env) {
 
 	if USE_SCHEME_NAMES {
 		for name, mapping := range alternateNames {
-			globalEnv.Dict[Symbol(name)], _ = Eval(Symbol(mapping), globalEnv)
+			globalEnv.Dict[Symbol(name)], _ = Eval2(Symbol(mapping), globalEnv)
 		}
 	}
 }
@@ -168,7 +168,7 @@ func main() {
 			}
 
 			for _, sexp := range sexps {
-				result, evalErr := Eval(sexp, globalEnv)
+				result, evalErr := Eval2(sexp, globalEnv)
 
 				if evalErr != "" {
 					fmt.Printf("No.\n\t%s\n", evalErr)
