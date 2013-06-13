@@ -118,6 +118,11 @@ func InitGlobalEnv(globalEnv *Env) {
 		Eval(expr, globalEnv)
 	}
 
+	//insert core functions defined in core_func.go
+	for name, ptr := range coreFuncs {
+		globalEnv.Dict[name] = ptr
+	}
+
 	if USE_SCHEME_NAMES {
 		for name, mapping := range alternateNames {
 			globalEnv.Dict[Symbol(name)], _ = Eval(Symbol(mapping), globalEnv)

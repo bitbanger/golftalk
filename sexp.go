@@ -117,18 +117,7 @@ func (lst *SexpPair) Eval(stack *Stack, env *Env) (result Expression, nextEnv *E
 
 	sym, _ := lst.val.(Symbol)
 
-	// Check all "core functions" first (if, lambda, let, etc.)
-	if coreFunc, wasCore := coreFuncs[sym]; wasCore {
-		stack.Push(coreFunc, args, env)
-		var done bool
-		result, nextEnv, done, err = coreFunc(&((*stack)[len(*stack)]), stack)
-		if done {
-			stack.Pop()
-		}
-		return
-	}
-
-	// If it wasn't a core function, evaluate the first element of the list as a function to apply to the rest of the list
+	// evaluate the first element of the list to get a function to apply to the rest of the list
 	// TODO: Argument number checking
 	evalFunc, funcErr := Eval(lst.val, env)
 	if funcErr != "" {
@@ -139,7 +128,7 @@ func (lst *SexpPair) Eval(stack *Stack, env *Env) (result Expression, nextEnv *E
 	proc, wasProc := evalFunc.(Procedure)
 
 	if wasProc {
-		return proc.Apply(args, env)
+		return Call(proc, args, env, stack)
 	} else {
 		return nil, nil, fmt.Sprintf("Function '%s' to execute was not a valid function.", lst.val)
 	}

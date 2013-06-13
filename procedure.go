@@ -5,8 +5,8 @@ import (
 )
 
 type Procedure interface {
-	//Runs the procedure with the given arguments
-	Apply(args *SexpPair, env *Env) (result Expression, newEnv *Env, err string)
+	//Runs/resumes the procedure
+	Run(frame *StackFrame, stack *Stack) (result Expression, newEnv *Env, err string)
 
 	//Sets the name of the Procedure if it doesn't have one already
 	GiveName(name string)
@@ -24,13 +24,18 @@ type Proc struct {
 
 var _ Procedure = &Proc{}
 
-func (p *Proc) Apply(args *SexpPair, env *Env) (result Expression, newEnv *Env, err string) {
+func (p *Proc) Run(frame *StackFrame, stack *Stack) (result Expression, newEnv *Env, err string) {
+	args, env := frame.Args, frame.CurrentEnv
+
 	argSlice, err := evalArgs(args, env)
 	if err != "" {
 		return nil, nil, err
 	}
 
 	newEnv = MakeEnv(p.Vars, argSlice, p.EvalEnv)
+
+	// Don't need our frame anymore
+	stack.Pop()
 
 	// Set the expression to be evaluated
 	return p.Exp, newEnv, ""
@@ -65,13 +70,19 @@ type GoProc struct {
 	funcPtr goProcPtr
 }
 
-func (g *GoProc) Apply(args *SexpPair, env *Env) (result Expression, newEnv *Env, err string) {
+func (g *GoProc) Run(frame *StackFrame, stack *Stack) (result Expression, newEnv *Env, err string) {
+	args, env := frame.Args, frame.CurrentEnv
+
 	newEnv = env
 	argSlice, err := evalArgs(args, env)
 	if err != "" {
 		return nil, nil, err
 	}
 	result, err = g.funcPtr(argSlice...)
+
+	// Don't need our frame anymore
+	stack.Pop()
+
 	return
 }
 
@@ -110,24 +121,33 @@ func evalArgs(args *SexpPair, env *Env) (argSlice []Expression, err string) {
 	return
 }
 
-func (g CoreFunc) Apply(args *SexpPair, env *Env) (result Expression, newEnv *Env, err string) {
-	//FIXME:implement
+func (f CoreFunc) Run(frame *StackFrame, stack *Stack) (result Expression, nextEnv *Env, err string) {
+	var done bool
+	result, nextEnv, done, err = f(frame, stack)
+	if done {
+		stack.Pop()
+	}
 	return
 }
 
-func (g CoreFunc) GiveName(name string) {
+func (_ CoreFunc) GiveName(name string) {
 	//dont care
 	return
 }
 
-func (g CoreFunc) String() string {
+func (_ CoreFunc) String() string {
 	return "#<core procedure>"
 }
 
-func (g CoreFunc) Eval(_ *Stack, env *Env) (result Expression, nextEnv *Env, err string) {
-	return g, env, ""
+func (f CoreFunc) Eval(_ *Stack, env *Env) (result Expression, nextEnv *Env, err string) {
+	return f, env, ""
 }
 
 func (_ CoreFunc) IsLiteral() bool {
 	return true
+}
+
+func Call(proc Procedure, args *SexpPair, env *Env, stack *Stack) (result Expression, nextEnv *Env, err string) {
+	stack.Push(proc, args, env)
+	return proc.Run(&((*stack)[len(*stack)-1]), stack)
 }
